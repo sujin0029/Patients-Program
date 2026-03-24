@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="乳腺外科">
+<meta name="theme-color" content="#0f5c52">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>乳腺外科患者管理</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+:root{
+  --p:#1a7a6f;--pd:#0f5c52;--pl:#e8f5f3;--plm:#c8ebe6;
+  --acc:#e07a50;--acc2:#c85a30;
+  --txt:#111;--txt2:#555;--txt3:#999;
+  --bg:#f2f4f3;--card:#fff;
+  --bdr:rgba(0,0,0,.08);
+  --red:#c0392b;--redl:#fde8e8;
+  --org:#d97706;--orgl:#fef3c7;
+  --grn:#1a7a6f;--grnl:#e8f5f3;
+  --safe-top:env(safe-area-inset-top,44px);
+  --safe-bot:env(safe-area-inset-bottom,20px);
+  --font:'SF Pro Display',-apple-system,'PingFang SC',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--font);color:var(--txt);font-size:16px;-webkit-font-smoothing:antialiased}
+
+/* ── App Shell ── */
+#app{display:flex;flex-direction:column;height:100%;max-width:430px;margin:0 auto;position:relative;background:var(--bg)}
+
+/* ── Status bar space ── */
+.status-pad{height:var(--safe-top);background:var(--pd);flex-shrink:0}
+
+/* ── Nav bar ── */
+.navbar{background:var(--pd);padding:0 18px 14px;display:flex;align-items:flex-end;justify-content:space-between;min-height:52px;flex-shrink:0;position:relative;z-index:10}
+.navbar-title{color:#fff;font-size:20px;font-weight:700;letter-spacing:-.3px}
+.navbar-back{color:rgba(255,255,255,.9);font-size:17px;display:flex;align-items:center;gap:4px;cursor:pointer;padding:4px 0}
+.navbar-action{color:rgba(255,255,255,.9);font-size:15px;cursor:pointer;padding:4px 0;font-weight:500}
+
+/* ── Scroll container ── */
+.page-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--safe-bot) + 72px)}
+.page-scroll.no-tab{padding-bottom:calc(var(--safe-bot) + 20px)}
+
+/* ── Bottom tab bar ── */
+.tabbar{position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:.5px solid var(--bdr);display:flex;padding-bottom:var(--safe-bot);z-index:20}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 6px;cursor:pointer;gap:3px;position:relative}
+.tab-ico{font-size:24px;line-height:1}
+.tab-lbl{font-size:11px;color:var(--txt3);font-weight:500}
+.tab.active .tab-lbl{color:var(--p);font-weight:600}
+.tab-badge{position:absolute;top:6px;right:calc(50% - 18px);width:9px;height:9px;background:var(--red);border-radius:50%;border:2px solid #fff}
+
+/* ── Pages ── */
+.screen{display:none;flex-direction:column;height:100%}
+.screen.active{display:flex}
+
+/* ── Cards ── */
+.card{background:var(--card);border-radius:16px;margin:10px 16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04)}
+.card-hd{padding:14px 16px;border-bottom:.5px solid var(--bdr);font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-bd{padding:14px 16px}
+
+/* ── Patient list ── */
+.pt-item{background:var(--card);margin:0 16px 10px;border-radius:16px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);display:flex;gap:13px;align-items:flex-start;cursor:pointer;transition:transform .12s,opacity .12s}
+.pt-item:active{transform:scale(.97);opacity:.9}
+.pt-av{width:48px;height:48px;border-radius:50%;background:var(--pl);color:var(--p);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;flex-shrink:0}
+.pt-av.mal{background:var(--redl);color:var(--red)}
+.pt-name{font-size:17px;font-weight:600;letter-spacing:-.2px}
+.pt-sub{font-size:13px;color:var(--txt3);margin-top:3px}
+.pt-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:500;line-height:1.3}
+.tag-c{background:var(--redl);color:var(--red)}
+.tag-b{background:var(--grnl);color:var(--grn)}
+.tag-pd{background:var(--orgl);color:var(--org)}
+.tag-ok{background:var(--pl);color:var(--p)}
+.pt-no{text-align:right;flex-shrink:0}
+.pt-no-lbl{font-size:11px;color:var(--txt3)}
+.pt-no-val{font-size:14px;font-weight:600;margin-top:2px}
+
+/* ── Search ── */
+.search-wrap{padding:10px 16px 4px}
+.search-box{background:var(--card);border-radius:12px;display:flex;align-items:center;padding:10px 14px;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.search-box input{flex:1;border:none;outline:none;font-size:15px;background:transparent;font-family:var(--font);color:var(--txt)}
+.search-ico{font-size:16px;color:var(--txt3)}
+.search-clear{font-size:14px;color:var(--txt3);cursor:pointer;padding:2px}
+
+/* ── FAB ── */
+.fab{position:absolute;bottom:calc(var(--safe-bot) + 80px);right:18px;width:56px;height:56px;background:var(--p);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff;box-shadow:0 4px 16px rgba(26,122,111,.4);cursor:pointer;z-index:15;transition:transform .15s}
+.fab:active{transform:scale(.9)}
+
+/* ── Forms ── */
+.fg{margin:0 16px 14px}
+.fl{font-size:13px;color:var(--txt3);margin-bottom:6px;font-weight:500}
+.fl.req::after{content:' *';color:var(--red)}
+.fi,.ft{width:100%;padding:12px 14px;border:1.5px solid rgba(0,0,0,.1);border-radius:12px;font-size:16px;font-family:var(--font);background:var(--card);color:var(--txt);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.fi:focus,.ft:focus{border-color:var(--p)}
+.ft{min-height:90px;resize:vertical;line-height:1.5}
+.type-row{display:flex;gap:10px}
+.type-btn{flex:1;padding:11px;border:2px solid rgba(0,0,0,.1);border-radius:12px;text-align:center;cursor:pointer;font-size:14px;transition:all .2s;font-family:var(--font);background:var(--card);color:var(--txt2)}
+.type-btn.sel{border-color:var(--p);background:var(--pl);color:var(--p);font-weight:600}
+.sec-lbl{padding:16px 16px 6px;font-size:12px;color:var(--txt3);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+
+/* ── Photo OCR area ── */
+.ocr-area{display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;border:2px dashed var(--plm);border-radius:12px;background:var(--pl);color:var(--p);cursor:pointer;font-size:14px;font-weight:500}
+.ocr-area input{display:none}
+.ocr-result{margin-top:8px;padding:11px 13px;background:#f0faf8;border-radius:10px;font-size:13px;color:#157060;line-height:1.6}
+
+/* ── Submit button ── */
+.btn-wrap{padding:6px 16px 20px}
+.btn-primary{width:100%;padding:15px;background:var(--p);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:600;font-family:var(--font);cursor:pointer;transition:opacity .15s}
+.btn-primary:active{opacity:.85}
+.btn-outline{width:100%;padding:14px;background:var(--card);color:var(--p);border:1.5px solid var(--p);border-radius:14px;font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer}
+.btn-danger{width:100%;padding:14px;background:var(--redl);color:var(--red);border:none;border-radius:14px;font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer}
+
+/* ── Detail ── */
+.detail-hero{background:linear-gradient(135deg,var(--pd) 0%,var(--p) 100%);padding:20px 18px 22px;display:flex;gap:14px;align-items:center;color:#fff}
+.detail-av{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;flex-shrink:0}
+.detail-name{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.detail-sub{font-size:13px;opacity:.8;margin-top:3px}
+.dtabs{display:flex;background:var(--card);border-bottom:.5px solid var(--bdr);overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
+.dtabs::-webkit-scrollbar{display:none}
+.dtab{padding:13px 16px;font-size:14px;color:var(--txt3);cursor:pointer;white-space:nowrap;border-bottom:2.5px solid transparent;transition:all .2s;font-weight:500}
+.dtab.on{color:var(--p);border-bottom-color:var(--p);font-weight:600}
+.ir{display:flex;padding:12px 16px;border-bottom:.5px solid var(--bdr)}
+.ir:last-child{border:none}
+.ik{color:var(--txt3);width:88px;flex-shrink:0;font-size:14px}
+.iv{flex:1;font-size:14px;word-break:break-all;line-height:1.5}
+
+/* ── Images grid ── */
+.img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px}
+.img-thumb{aspect-ratio:1;border-radius:10px;overflow:hidden;cursor:pointer;border:.5px solid var(--bdr)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-add{aspect-ratio:1;border-radius:10px;border:2px dashed var(--bdr);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--txt3);font-size:12px;cursor:pointer;background:rgba(0,0,0,.01)}
+.img-add span:first-child{font-size:26px;line-height:1}
+
+/* ── Reminders ── */
+.ri{background:var(--card);margin:0 16px 10px;border-radius:16px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);display:flex;gap:13px;cursor:pointer;transition:transform .12s}
+.ri:active{transform:scale(.97)}
+.ri-ico{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ri-ico.ov{background:var(--redl)}
+.ri-ico.soon{background:var(--orgl)}
+.ri-ico.far{background:var(--pl)}
+.ri-name{font-size:15px;font-weight:600}
+.ri-desc{font-size:13px;color:var(--txt3);margin-top:2px}
+.ri-date{font-size:13px;margin-top:5px;font-weight:500}
+.ri-date.ov{color:var(--red)}
+.ri-date.soon{color:var(--org)}
+.ri-date.ok{color:var(--txt3)}
+
+/* ── Stats ── */
+.period-sw{display:flex;margin:12px 16px 0;background:var(--card);border-radius:12px;padding:3px;gap:3px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.psw{flex:1;padding:9px;text-align:center;border-radius:10px;font-size:14px;cursor:pointer;color:var(--txt3);transition:all .2s;font-weight:500}
+.psw.on{background:var(--p);color:#fff;font-weight:600}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px 4px}
+.sc{background:var(--card);border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sl{font-size:12px;color:var(--txt3);margin-bottom:4px}
+.sv{font-size:28px;font-weight:700;line-height:1.1}
+.sv.green{color:var(--p)}
+.sv.red{color:var(--red)}
+.sv.orange{color:var(--org)}
+.ss{font-size:12px;color:var(--txt3);margin-top:3px}
+
+/* ── Bar chart ── */
+.barchart{background:var(--card);margin:0 16px 12px;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.barchart-title{font-size:14px;font-weight:600;margin-bottom:16px}
+.bars{display:flex;align-items:flex-end;gap:2px;height:120px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:0}
+.bar-group{display:flex;align-items:flex-end;gap:2px;width:100%}
+.bar-seg{border-radius:3px 3px 0 0;min-width:8px;transition:height .4s}
+.bar-c{background:#c0392b;opacity:.75}
+.bar-b{background:var(--p);opacity:.75}
+.bar-x{font-size:10px;color:var(--txt3);margin-top:4px;text-align:center}
+.bar-legend{display:flex;gap:16px;margin-top:10px;justify-content:center}
+.bl{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--txt2)}
+.bl-dot{width:10px;height:10px;border-radius:2px}
+.bl-dot.c{background:#c0392b;opacity:.75}
+.bl-dot.b{background:var(--p);opacity:.75}
+
+/* ── Chemo ── */
+.chemo-item{display:flex;align-items:center;padding:12px 16px;border-bottom:.5px solid var(--bdr);gap:12px}
+.chemo-num{width:30px;height:30px;border-radius:50%;background:var(--pl);color:var(--p);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+
+/* ── Modal / Sheet ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-end;opacity:0;transition:opacity .25s;pointer-events:none}
+.overlay.show{opacity:1;pointer-events:all}
+.sheet{background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-width:430px;margin:0 auto;padding-bottom:calc(var(--safe-bot) + 10px);max-height:90vh;overflow-y:auto;transform:translateY(40px);transition:transform .3s cubic-bezier(.32,0,.15,1)}
+.overlay.show .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:rgba(0,0,0,.15);border-radius:2px;margin:10px auto 4px}
+.sheet-title{font-size:17px;font-weight:600;text-align:center;padding:10px 16px 16px;border-bottom:.5px solid var(--bdr);margin-bottom:4px}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:60px 20px;color:var(--txt3)}
+.empty-icon{font-size:60px;margin-bottom:12px}
+.empty-title{font-size:17px;color:var(--txt2);font-weight:500}
+.empty-sub{font-size:14px;margin-top:6px}
+
+/* ── Toast ── */
+.toast{position:fixed;top:calc(var(--safe-top) + 60px);left:50%;transform:translateX(-50%) translateY(-12px);background:rgba(20,20,20,.88);color:#fff;padding:10px 20px;border-radius:22px;font-size:14px;z-index:200;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none;backdrop-filter:blur(8px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Loading ── */
+.spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── iOS date input hack ── */
+input[type=date]{-webkit-appearance:none;color:var(--txt)}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
+
+/* ── Scrollbar hide ── */
+.page-scroll::-webkit-scrollbar{display:none}
+
+/* ── Path/DC text ── */
+.path-block{background:#f8faf9;border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.7;color:var(--txt2);white-space:pre-wrap;word-break:break-all}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="status-pad"></div>
+
+  <!-- ══ NAVBAR ══ -->
+  <div class="navbar" id="navbar">
+    <span class="navbar-back" id="nav-back" style="display:none" onclick="goBack()">‹ 返回</span>
+    <span class="navbar-title" id="nav-title">患者管理</span>
+    <span class="navbar-action" id="nav-action" style="display:none"></span>
+  </div>
+
+  <!-- ══ SCREENS ══ -->
+
+  <!-- [0] 患者列表 -->
+  <div class="screen active" id="sc-list">
+    <div class="page-scroll" id="sc-list-scroll">
+      <div class="search-wrap">
+        <div class="search-box">
+          <span class="search-ico">🔍</span>
+          <input type="search" id="search-inp" placeholder="搜索姓名、住院号…" oninput="renderList()">
+          <span class="search-clear" onclick="clearSearch()">✕</span>
+        </div>
+      </div>
+      <div id="pt-list"></div>
+    </div>
+    <div class="fab" onclick="toAdd()">+</div>
+    <div class="tabbar">
+      <div class="tab active" id="tab0" onclick="switchTab(0)">
+        <div class="tab-ico">👥</div><div class="tab-lbl">患者</div>
+      </div>
+      <div class="tab" id="tab1" onclick="switchTab(1)">
+        <div class="tab-ico" id="bell-ico">🔔</div><div class="tab-lbl">提醒</div>
+      </div>
+      <div class="tab" id="tab2" onclick="switchTab(2)">
+        <div class="tab-ico">📊</div><div class="tab-lbl">统计</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [1] 提醒 -->
+  <div class="screen" id="sc-remind">
+    <div class="page-scroll" id="sc-remind-scroll">
+      <div id="remind-list"></div>
+    </div>
+    <div class="tabbar">
+      <div class="tab" id="tab0r" onclick="switchTab(0)">
+        <div class="tab-ico">👥</div><div class="tab-lbl">患者</div>
+      </div>
+      <div class="tab active" id="tab1r" onclick="switchTab(1)">
+        <div class="tab-ico">🔔</div><div class="tab-lbl">提醒</div>
+      </div>
+      <div class="tab" id="tab2r" onclick="switchTab(2)">
+        <div class="tab-ico">📊</div><div class="tab-lbl">统计</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [2] 统计 -->
+  <div class="screen" id="sc-stats">
+    <div class="page-scroll" id="sc-stats-scroll">
+      <div id="stats-body"></div>
+    </div>
+    <div class="tabbar">
+      <div class="tab" id="tab0s" onclick="switchTab(0)">
+        <div class="tab-ico">👥</div><div class="tab-lbl">患者</div>
+      </div>
+      <div class="tab" id="tab1s" onclick="switchTab(1)">
+        <div class="tab-ico">🔔</div><div class="tab-lbl">提醒</div>
+      </div>
+      <div class="tab active" id="tab2s" onclick="switchTab(2)">
+        <div class="tab-ico">📊</div><div class="tab-lbl">统计</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [3] 添加/编辑 -->
+  <div class="screen" id="sc-add">
+    <div class="page-scroll no-tab" id="sc-add-scroll">
+      <div class="sec-lbl">📷 拍照快速录入</div>
+      <div class="fg">
+        <label class="ocr-area" onclick="triggerOCR()">
+          📷 拍摄病历 / 腕带 → 自动识别填写
+        </label>
+        <div id="ocr-msg"></div>
+        <div id="ocr-preview" style="display:none;margin-top:8px"></div>
+      </div>
+      <div class="sec-lbl">✏️ 基本信息</div>
+      <div class="fg"><div class="fl req">患者姓名</div><input class="fi" id="f-name" placeholder="如：张三"></div>
+      <div class="fg"><div class="fl req">住院号</div><input class="fi" id="f-adm" placeholder="如：H2024001"></div>
+      <div class="fg"><div class="fl">门诊号</div><input class="fi" id="f-out" placeholder="如：C2024001"></div>
+      <div class="fg"><div class="fl req">手术日期</div><input class="fi" type="date" id="f-date"></div>
+      <div class="fg"><div class="fl req">手术方式</div><input class="fi" id="f-method" placeholder="如：乳腺癌改良根治术"></div>
+      <div class="fg"><div class="fl">快速病理</div><input class="fi" id="f-fast" placeholder="如：浸润性导管癌"></div>
+      <div class="fg">
+        <div class="fl req">肿瘤类型</div>
+        <div class="type-row">
+          <div class="type-btn sel" id="tb-cancer" onclick="selType('cancer')">🎗 乳腺癌</div>
+          <div class="type-btn" id="tb-benign" onclick="selType('benign')">🌿 良性肿瘤</div>
+        </div>
+      </div>
+      <div class="btn-wrap"><button class="btn-primary" onclick="submitAdd()">保存患者信息</button></div>
+    </div>
+  </div>
+
+  <!-- [4] 患者详情 -->
+  <div class="screen" id="sc-detail">
+    <div id="detail-hero-wrap"></div>
+    <div class="dtabs" id="dtabs"></div>
+    <div class="page-scroll no-tab" id="detail-scroll">
+      <div id="detail-body"></div>
+    </div>
+  </div>
+
+  <!-- 底部 Sheet - 病理 -->
+  <div class="overlay" id="ov-path" onclick="closeSheet('ov-path')">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">上传病理结果</div>
+      <div class="fg"><div class="fl req">常规病理</div><textarea class="ft" id="rp-inp" placeholder="输入常规病理结果…"></textarea></div>
+      <div class="fg"><div class="fl req">免疫组化</div><textarea class="ft" id="ihc-inp" placeholder="输入免疫组化结果…"></textarea></div>
+      <div class="fg">
+        <label class="ocr-area" onclick="triggerPathOCR()">📷 拍摄病理报告 → 自动识别</label>
+        <div id="path-ocr-msg"></div>
+      </div>
+      <div class="fg" style="display:flex;gap:10px">
+        <button class="btn-outline" onclick="closeSheet('ov-path')">取消</button>
+        <button class="btn-primary" onclick="savePathology()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部 Sheet - 出院小结 -->
+  <div class="overlay" id="ov-dc" onclick="closeSheet('ov-dc')">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">出院小结</div>
+      <div class="fg"><textarea class="ft" id="dc-inp" rows="6" placeholder="输入出院小结内容…" style="min-height:120px"></textarea></div>
+      <div class="fg">
+        <label class="ocr-area" onclick="triggerDcOCR()">📷 拍摄出院小结 → 自动识别</label>
+        <div id="dc-ocr-msg"></div>
+      </div>
+      <div class="fg" style="display:flex;gap:10px">
+        <button class="btn-outline" onclick="closeSheet('ov-dc')">取消</button>
+        <button class="btn-primary" onclick="saveDC()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- Hidden file inputs (iOS camera/gallery) -->
+<input type="file" id="inp-ocr" accept="image/*" capture="environment" style="display:none" onchange="handleOCR(event,'patient')">
+<input type="file" id="inp-path" accept="image/*" capture="environment" style="display:none" onchange="handleOCR(event,'path')">
+<input type="file" id="inp-dc" accept="image/*" capture="environment" style="display:none" onchange="handleOCR(event,'dc')">
+<input type="file" id="inp-img" accept="image/*" multiple style="display:none" onchange="handleExamImages(event)">
+
+<script>
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let DB = JSON.parse(localStorage.getItem('pm_v2') || 'null') || { patients: [] }
+let screen = 'list'        // current screen
+let prevScreens = []       // back stack
+let editId = null          // patient being edited
+let detailId = null        // patient being viewed
+let dtab = 0               // detail tab index
+let statPeriod = 'month'
+let currentOCRTarget = null
+
+function save() { localStorage.setItem('pm_v2', JSON.stringify(DB)) }
+
+// ════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2)
+const today = () => new Date().toISOString().slice(0, 10)
+
+function addDays(s, n) {
+  const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+function addMonths(s, n) {
+  const d = new Date(s + 'T00:00:00'); d.setMonth(d.getMonth() + n)
+  return d.toISOString().slice(0, 10)
+}
+function diffDays(s) {
+  const now = new Date(); now.setHours(0,0,0,0)
+  return Math.round((new Date(s + 'T00:00:00') - now) / 86400000)
+}
+function fmtDate(s) {
+  if (!s) return '未填写'
+  const d = new Date(s + 'T00:00:00')
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`
+}
+function dateLabel(s) {
+  const d = diffDays(s)
+  if (d < 0) return `⚠️ 已逾期${-d}天`
+  if (d === 0) return '⏰ 今天'
+  if (d === 1) return '明天'
+  return fmtDate(s)
+}
+function dateCls(s) {
+  const d = diffDays(s)
+  return d < 0 ? 'ov' : d <= 3 ? 'soon' : 'ok'
+}
+function icoCls(s) {
+  const d = diffDays(s)
+  return d < 0 ? 'ov' : d <= 3 ? 'soon' : 'far'
+}
+
+function toast(msg, dur = 2200) {
+  const t = document.getElementById('toast')
+  t.textContent = msg; t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), dur)
+}
+
+// ════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════
+function showScreen(name, push = true) {
+  if (push && screen !== name) prevScreens.push(screen)
+  screen = name
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById('sc-' + name).classList.add('active')
+
+  const nb = document.getElementById('navbar')
+  const back = document.getElementById('nav-back')
+  const title = document.getElementById('nav-title')
+  const action = document.getElementById('nav-action')
+  const fab = document.querySelector('.fab')
+
+  const tabScreens = ['list', 'remind', 'stats']
+  const isTab = tabScreens.includes(name)
+
+  back.style.display = isTab ? 'none' : 'block'
+  action.style.display = 'none'
+  if (fab) fab.style.display = name === 'list' ? 'flex' : 'none'
+
+  const titles = { list: '患者管理', remind: '随访提醒', stats: '统计分析', add: editId ? '编辑患者' : '添加患者', detail: '患者详情' }
+  title.textContent = titles[name] || ''
+
+  if (name === 'add') {
+    action.style.display = 'block'
+    action.textContent = '保存'
+    action.onclick = submitAdd
+  }
+  if (name === 'detail') {
+    action.style.display = 'block'
+    action.textContent = '编辑'
+    action.onclick = () => { editId = detailId; toAdd() }
+  }
+}
+
+function goBack() {
+  const prev = prevScreens.pop() || 'list'
+  if (prev === 'detail') renderDetail(detailId)
+  if (prev === 'list') renderList()
+  showScreen(prev, false)
+}
+
+function switchTab(i) {
+  prevScreens = []
+  const screens = ['list', 'remind', 'stats']
+  if (screens[i] === 'remind') renderReminders()
+  if (screens[i] === 'stats') renderStats()
+  if (screens[i] === 'list') renderList()
+  showScreen(screens[i], false)
+}
+
+// ════════════════════════════════════════
+//  OCR  (Apple Vision via Live Text)
+// ════════════════════════════════════════
+// On iOS 15+, when user takes a photo Safari can auto-detect text.
+// We use the system keyboard's scan text feature + camera input.
+// For actual image-to-text we use a canvas + tesseract approach offline,
+// but the simplest reliable offline OCR on iOS is: show the image and
+// let the user use iOS Live Text (long-press → select text).
+// We also provide manual paste area as fallback.
+
+function triggerOCR() { currentOCRTarget = 'patient'; document.getElementById('inp-ocr').click() }
+function triggerPathOCR() { currentOCRTarget = 'path'; document.getElementById('inp-path').click() }
+function triggerDcOCR() { currentOCRTarget = 'dc'; document.getElementById('inp-dc').click() }
+
+function handleOCR(event, target) {
+  const file = event.target.files[0]; if (!file) return
+  const reader = new FileReader()
+  reader.onload = e => {
+    const dataUrl = e.target.result
+    if (target === 'patient') showOCRPreview(dataUrl)
+    if (target === 'path') showPathOCRPreview(dataUrl)
+    if (target === 'dc') showDcOCRPreview(dataUrl)
+  }
+  reader.readAsDataURL(file)
+  event.target.value = ''
+}
+
+function showOCRPreview(dataUrl) {
+  const prev = document.getElementById('ocr-preview')
+  prev.style.display = 'block'
+  prev.innerHTML = `
+    <div style="background:#f0faf8;border-radius:12px;padding:12px;font-size:13px;color:#157060;line-height:1.7">
+      📸 图片已加载。请在下方对应字段中，使用<strong>「扫描文字」</strong>功能（长按输入框 → 扫描文字）或直接手动填写。<br>
+      <small style="opacity:.7">iOS 15+ 支持实时文字识别，对准图片中的文字即可复制</small>
+    </div>
+    <img src="${dataUrl}" style="width:100%;border-radius:10px;margin-top:8px;max-height:200px;object-fit:contain;background:#f5f5f5">
+  `
+  document.getElementById('ocr-msg').innerHTML = ''
+}
+
+function showPathOCRPreview(dataUrl) {
+  document.getElementById('path-ocr-msg').innerHTML = `
+    <div style="margin-top:8px;background:#f0faf8;border-radius:10px;padding:10px 12px;font-size:13px;color:#157060">
+      📸 图片已加载。长按上方文本框 → 「扫描文字」即可自动录入
+    </div>
+    <img src="${dataUrl}" style="width:100%;border-radius:8px;margin-top:6px;max-height:180px;object-fit:contain;background:#f5f5f5">
+  `
+}
+
+function showDcOCRPreview(dataUrl) {
+  document.getElementById('dc-ocr-msg').innerHTML = `
+    <div style="margin-top:8px;background:#f0faf8;border-radius:10px;padding:10px 12px;font-size:13px;color:#157060">
+      📸 图片已加载。长按文本框 → 「扫描文字」即可自动录入
+    </div>
+    <img src="${dataUrl}" style="width:100%;border-radius:8px;margin-top:6px;max-height:180px;object-fit:contain;background:#f5f5f5">
+  `
+}
+
+// ════════════════════════════════════════
+//  PATIENT LIST
+// ════════════════════════════════════════
+function renderList() {
+  const kw = (document.getElementById('search-inp') || {}).value || ''
+  let list = DB.patients.filter(p =>
+    !kw || p.name.includes(kw) || (p.admNo||'').includes(kw) || (p.outNo||'').includes(kw)
+  ).sort((a,b) => (b.surgDate||'').localeCompare(a.surgDate||''))
+
+  const el = document.getElementById('pt-list')
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🏥</div><div class="empty-title">${kw ? '未找到匹配患者' : '暂无患者'}</div><div class="empty-sub">${kw ? '换个关键词试试' : '点击右下角 + 新增'}</div></div>`
+    updateBadge(); return
+  }
+  el.innerHTML = list.map(p => `
+    <div class="pt-item" onclick="toDetail('${p.id}')">
+      <div class="pt-av ${p.type==='cancer'?'mal':''}">${p.name[0]}</div>
+      <div style="flex:1;min-width:0">
+        <div class="pt-name">${p.name}</div>
+        <div class="pt-sub">${p.surgDate||'—'} · ${p.method||'未填手术方式'}</div>
+        <div class="pt-tags">
+          <span class="tag ${p.type==='cancer'?'tag-c':'tag-b'}">${p.type==='cancer'?'乳腺癌':'良性肿瘤'}</span>
+          <span class="tag ${p.pathDone?'tag-ok':'tag-pd'}">${p.pathDone?'病理已出':'待查病理'}</span>
+        </div>
+      </div>
+      <div class="pt-no"><div class="pt-no-lbl">住院号</div><div class="pt-no-val">${p.admNo||'—'}</div></div>
+    </div>`).join('')
+  updateBadge()
+}
+
+function clearSearch() {
+  document.getElementById('search-inp').value = ''
+  renderList()
+}
+
+function updateBadge() {
+  const n = getReminders().filter(r => diffDays(r.date) <= 0).length
+  const bi = document.getElementById('bell-ico')
+  bi.innerHTML = n > 0 ? '🔔<span class="tab-badge"></span>' : '🔔'
+}
+
+// ════════════════════════════════════════
+//  ADD / EDIT
+// ════════════════════════════════════════
+let _selType = 'cancer'
+
+function toAdd() {
+  _selType = 'cancer'
+  document.getElementById('sc-add-scroll').scrollTop = 0
+  if (editId) {
+    const p = DB.patients.find(x => x.id === editId)
+    if (p) {
+      document.getElementById('f-name').value = p.name || ''
+      document.getElementById('f-adm').value = p.admNo || ''
+      document.getElementById('f-out').value = p.outNo || ''
+      document.getElementById('f-date').value = p.surgDate || ''
+      document.getElementById('f-method').value = p.method || ''
+      document.getElementById('f-fast').value = p.fastPath || ''
+      _selType = p.type || 'cancer'
+    }
+  } else {
+    ['f-name','f-adm','f-out','f-method','f-fast'].forEach(id => document.getElementById(id).value = '')
+    document.getElementById('f-date').value = today()
+    document.getElementById('ocr-msg').innerHTML = ''
+    document.getElementById('ocr-preview').style.display = 'none'
+  }
+  selType(_selType)
+  showScreen('add')
+}
+
+function selType(t) {
+  _selType = t
+  document.getElementById('tb-cancer').classList.toggle('sel', t === 'cancer')
+  document.getElementById('tb-benign').classList.toggle('sel', t === 'benign')
+}
+
+function submitAdd() {
+  const name = document.getElementById('f-name').value.trim()
+  const admNo = document.getElementById('f-adm').value.trim()
+  const surgDate = document.getElementById('f-date').value
+  if (!name) { toast('请填写患者姓名'); return }
+  if (!admNo) { toast('请填写住院号'); return }
+  if (!surgDate) { toast('请填写手术日期'); return }
+  const data = {
+    name, admNo,
+    outNo: document.getElementById('f-out').value.trim(),
+    surgDate,
+    method: document.getElementById('f-method').value.trim(),
+    fastPath: document.getElementById('f-fast').value.trim(),
+    type: _selType,
+    updAt: today()
+  }
+  if (editId) {
+    const idx = DB.patients.findIndex(p => p.id === editId)
+    DB.patients[idx] = { ...DB.patients[idx], ...data }
+    save(); toast('已更新 ✓'); editId = null
+    renderDetail(detailId); goBack()
+  } else {
+    const p = { id: uid(), ...data, pathDone: false, rPath: '', ihc: '', dc: '', imgs: [], chemo: [], createdAt: today() }
+    DB.patients.push(p); save(); toast('患者已添加 ✓')
+    editId = null; renderList(); showScreen('list', false)
+    prevScreens = []
+  }
+}
+
+// ════════════════════════════════════════
+//  DETAIL
+// ════════════════════════════════════════
+function toDetail(id) {
+  detailId = id; dtab = 0; renderDetail(id)
+  showScreen('detail')
+}
+
+function renderDetail(id) {
+  const p = DB.patients.find(x => x.id === id); if (!p) return
+  // Hero
+  document.getElementById('detail-hero-wrap').innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-av">${p.name[0]}</div>
+      <div><div class="detail-name">${p.name}</div>
+      <div class="detail-sub">${p.type==='cancer'?'乳腺癌':'良性肿瘤'} · 住院号 ${p.admNo||'—'}</div></div>
+    </div>`
+  // Tabs
+  const tabs = ['基本信息','病理结果','出院材料','化疗随访']
+  document.getElementById('dtabs').innerHTML = tabs.map((t,i) =>
+    `<div class="dtab ${dtab===i?'on':''}" onclick="switchDtab(${i})">${t}</div>`).join('')
+  // Body
+  let body = ''
+  if (dtab === 0) {
+    body = `<div class="card">
+      ${[['姓名',p.name],['住院号',p.admNo||'—'],['门诊号',p.outNo||'—'],['手术日期',fmtDate(p.surgDate)],['手术方式',p.method||'—'],['快速病理',p.fastPath||'—'],['肿瘤类型',p.type==='cancer'?'乳腺癌':'良性肿瘤']].map(([k,v])=>`<div class="ir"><div class="ik">${k}</div><div class="iv">${v}</div></div>`).join('')}
+    </div>`
+  } else if (dtab === 1) {
+    body = `<div class="card">
+      <div class="card-hd">常规病理 &amp; 免疫组化 <span class="tag ${p.pathDone?'tag-ok':'tag-pd'}">${p.pathDone?'已完成':'待上传'}</span></div>
+      <div class="card-bd">
+        ${p.pathDone ? `<div style="margin-bottom:10px"><div style="font-size:13px;color:var(--txt3);margin-bottom:5px">常规病理</div><div class="path-block">${p.rPath||'—'}</div></div>
+        <div><div style="font-size:13px;color:var(--txt3);margin-bottom:5px">免疫组化</div><div class="path-block">${p.ihc||'—'}</div></div>`
+        : `<div style="text-align:center;padding:20px 0;color:var(--txt3);font-size:14px">术后10天提醒查询病理结果</div>`}
+        <button class="${p.pathDone?'btn-outline':'btn-primary'}" style="width:100%;margin-top:14px;padding:13px;border-radius:12px;font-size:15px;font-family:var(--font);cursor:pointer;border:${p.pathDone?'1.5px solid var(--p)':0}" onclick="openPathSheet('${id}')">${p.pathDone?'✏️ 修改结果':'+ 上传病理结果'}</button>
+      </div>
+    </div>`
+  } else if (dtab === 2) {
+    const imgs = p.imgs || []
+    body = `<div class="card">
+      <div class="card-hd">出院小结</div>
+      <div class="card-bd">
+        ${p.dc ? `<div class="path-block" style="margin-bottom:12px">${p.dc}</div><button class="btn-outline" style="width:100%;padding:12px;border-radius:12px;font-size:14px;font-family:var(--font);cursor:pointer;border:1.5px solid var(--p)" onclick="openDcSheet('${id}')">✏️ 修改</button>`
+        : `<button class="btn-primary" style="width:100%;padding:13px;border-radius:12px;font-size:15px;font-family:var(--font);cursor:pointer;border:none" onclick="openDcSheet('${id}')">+ 上传出院小结</button>`}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">检查图片 <span style="color:var(--txt3);font-weight:400">${imgs.length}张</span></div>
+      <div class="img-grid">
+        ${imgs.map((img,i) => `<div class="img-thumb" onclick="previewImg('${id}',${i})"><img src="${img}" loading="lazy"></div>`).join('')}
+        <div class="img-add" onclick="document.getElementById('inp-img').click()"><span>+</span><span>添加</span></div>
+      </div>
+    </div>`
+  } else if (dtab === 3) {
+    const chemo = p.chemo || []
+    body = `<div class="card">
+      <div class="card-hd">化疗记录 <button onclick="addChemo('${id}')" style="background:var(--p);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:var(--font)">+ 新增</button></div>
+      ${chemo.length === 0 ? `<div style="text-align:center;padding:24px;color:var(--txt3);font-size:14px">暂无化疗记录</div>` :
+        chemo.map((c,i) => `<div class="chemo-item">
+          <div class="chemo-num">${i+1}</div>
+          <div style="flex:1"><div style="font-size:15px;font-weight:600">第${i+1}疗程</div><div style="font-size:13px;color:var(--txt3)">${fmtDate(c.date)}</div></div>
+          <div style="font-size:12px;color:var(--txt3)">7天随访：${fmtDate(addDays(c.date,7))}</div>
+        </div>`).join('')}
+    </div>
+    <div style="padding:14px 16px 6px">
+      <button class="btn-danger" onclick="deletePatient('${id}')">删除此患者</button>
+    </div>`
+  }
+  document.getElementById('detail-body').innerHTML = body
+  document.getElementById('detail-scroll').scrollTop = 0
+}
+
+function switchDtab(i) { dtab = i; renderDetail(detailId) }
+
+function openPathSheet(id) {
+  const p = DB.patients.find(x => x.id === id)
+  document.getElementById('rp-inp').value = p.rPath || ''
+  document.getElementById('ihc-inp').value = p.ihc || ''
+  document.getElementById('path-ocr-msg').innerHTML = ''
+  openSheet('ov-path')
+}
+
+function savePathology() {
+  const rp = document.getElementById('rp-inp').value.trim()
+  const ihc = document.getElementById('ihc-inp').value.trim()
+  if (!rp || !ihc) { toast('请填写常规病理和免疫组化'); return }
+  const p = DB.patients.find(x => x.id === detailId)
+  p.rPath = rp; p.ihc = ihc; p.pathDone = true
+  save(); closeSheet('ov-path'); renderDetail(detailId); toast('病理结果已保存 ✓')
+}
+
+function openDcSheet(id) {
+  const p = DB.patients.find(x => x.id === id)
+  document.getElementById('dc-inp').value = p.dc || ''
+  document.getElementById('dc-ocr-msg').innerHTML = ''
+  openSheet('ov-dc')
+}
+
+function saveDC() {
+  const v = document.getElementById('dc-inp').value.trim()
+  const p = DB.patients.find(x => x.id === detailId)
+  p.dc = v; save(); closeSheet('ov-dc'); renderDetail(detailId); toast('出院小结已保存 ✓')
+}
+
+function addChemo(id) {
+  const date = prompt('请输入化疗日期（格式：YYYY-MM-DD）', today())
+  if (!date) return
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast('日期格式不正确，应为 YYYY-MM-DD'); return }
+  const p = DB.patients.find(x => x.id === id)
+  if (!p.chemo) p.chemo = []
+  p.chemo.push({ id: uid(), date })
+  p.chemo.sort((a,b) => a.date.localeCompare(b.date))
+  save(); renderDetail(id); toast('化疗记录已添加 ✓')
+}
+
+function handleExamImages(event) {
+  const files = Array.from(event.target.files); if (!files.length) return
+  const p = DB.patients.find(x => x.id === detailId); if (!p) return
+  if (!p.imgs) p.imgs = []
+  let done = 0
+  files.forEach(file => {
+    const reader = new FileReader()
+    reader.onload = e => {
+      p.imgs.push(e.target.result)
+      if (++done === files.length) { save(); renderDetail(detailId); toast(`已添加${done}张图片 ✓`) }
+    }
+    reader.readAsDataURL(file)
+  })
+  event.target.value = ''
+}
+
+function previewImg(id, idx) {
+  const p = DB.patients.find(x => x.id === id); if (!p) return
+  // iOS: open image in new tab for native zoom/share
+  const w = window.open()
+  w.document.write(`<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${p.imgs[idx]}" style="max-width:100%;max-height:100vh;object-fit:contain"></body>`)
+}
+
+function deletePatient(id) {
+  if (!confirm('确认删除该患者的所有信息？此操作不可撤销。')) return
+  DB.patients = DB.patients.filter(p => p.id !== id)
+  save(); goBack(); renderList(); toast('已删除')
+}
+
+// ════════════════════════════════════════
+//  REMINDERS
+// ════════════════════════════════════════
+function getReminders() {
+  const all = [], now = today()
+  DB.patients.forEach(p => {
+    if (!p.surgDate) return
+    if (!p.pathDone) {
+      const d = addDays(p.surgDate, 10)
+      all.push({ pid:p.id, name:p.name, date:d, label:'查询常规病理+免疫组化', icon:'🔬' })
+    }
+    const d10 = addDays(p.surgDate, 10)
+    if (diffDays(d10) >= -3)
+      all.push({ pid:p.id, name:p.name, date:d10, label:'术后第10天 — 联系患者', icon:'📞' })
+    for (let m = 3; m <= 60; m += 3) {
+      const d = addMonths(p.surgDate, m)
+      if (d < now && diffDays(d) < -14) continue
+      if (diffDays(d) > 400) break
+      const lbl = m % 12 === 0 ? `术后${m/12}年随访` : `术后${m}个月随访`
+      all.push({ pid:p.id, name:p.name, date:d, label:lbl, icon:'📅' })
+    }
+    ;(p.chemo || []).forEach((c, i) => {
+      const d = addDays(c.date, 7)
+      if (diffDays(d) < -14) return
+      all.push({ pid:p.id, name:p.name, date:d, label:`第${i+1}疗程化疗后第7天联系`, icon:'💊' })
+    })
+  })
+  return all.sort((a,b) => a.date.localeCompare(b.date))
+}
+
+function renderReminders() {
+  const all = getReminders(), now = today()
+  const overdue = all.filter(r => r.date < now)
+  const upcoming = all.filter(r => r.date >= now)
+  let html = ''
+  if (!all.length) {
+    html = `<div class="empty"><div class="empty-icon">🎉</div><div class="empty-title">暂无提醒</div><div class="empty-sub">添加患者后自动生成随访提醒</div></div>`
+  } else {
+    if (overdue.length) {
+      html += `<div class="sec-lbl">⚠️ 已逾期（${overdue.length}条）</div>`
+      html += overdue.map(r => riHTML(r)).join('')
+    }
+    if (upcoming.length) {
+      html += `<div class="sec-lbl">📅 即将到来</div>`
+      html += upcoming.map(r => riHTML(r)).join('')
+    }
+  }
+  document.getElementById('remind-list').innerHTML = html
+}
+
+function riHTML(r) {
+  const cls = dateCls(r.date), ico = icoCls(r.date)
+  return `<div class="ri" onclick="toDetail('${r.pid}')">
+    <div class="ri-ico ${ico}">${r.icon}</div>
+    <div style="flex:1"><div class="ri-name">${r.name}</div>
+    <div class="ri-desc">${r.label}</div>
+    <div class="ri-date ${cls}">${dateLabel(r.date)}</div></div>
+  </div>`
+}
+
+// ════════════════════════════════════════
+//  STATS
+// ════════════════════════════════════════
+function renderStats() {
+  const pts = DB.patients
+  const now = new Date()
+  const inRange = p => {
+    if (!p.surgDate) return false
+    const d = new Date(p.surgDate + 'T00:00:00')
+    if (statPeriod === 'week') {
+      const s = new Date(now); s.setDate(s.getDate() - s.getDay()); s.setHours(0,0,0,0)
+      return d >= s
+    }
+    if (statPeriod === 'month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth()
+    return d.getFullYear()===now.getFullYear()
+  }
+  const fp = pts.filter(inRange)
+  const c = fp.filter(p=>p.type==='cancer').length
+  const b = fp.filter(p=>p.type==='benign').length
+
+  // monthly data for chart
+  const months = [], maxH = 100
+  let maxV = 1
+  for (let i=5;i>=0;i--) {
+    const mo = new Date(now.getFullYear(), now.getMonth()-i, 1)
+    const mc = pts.filter(p=>{
+      if(!p.surgDate) return false
+      const d=new Date(p.surgDate+'T00:00:00')
+      return d.getFullYear()===mo.getFullYear()&&d.getMonth()===mo.getMonth()
+    })
+    const cancer=mc.filter(p=>p.type==='cancer').length
+    const benign=mc.filter(p=>p.type==='benign').length
+    months.push({lbl:`${mo.getMonth()+1}月`,cancer,benign})
+    maxV=Math.max(maxV,cancer+benign)
+  }
+
+  const barCols = months.map(m => {
+    const ch = Math.round(m.cancer/maxV*maxH)
+    const bh = Math.round(m.benign/maxV*maxH)
+    return `<div class="bar-col">
+      <div class="bar-group" style="height:${maxH}px">
+        <div class="bar-seg bar-c" style="height:${ch}px"></div>
+        <div class="bar-seg bar-b" style="height:${bh}px"></div>
+      </div>
+      <div class="bar-x">${m.lbl}</div>
+    </div>`
+  }).join('')
+
+  const allC = pts.filter(p=>p.type==='cancer').length
+  const allB = pts.filter(p=>p.type==='benign').length
+  const cp = fp.length ? Math.round(c/fp.length*100) : 0
+  const bp = fp.length ? Math.round(b/fp.length*100) : 0
+
+  document.getElementById('stats-body').innerHTML = `
+    <div class="period-sw">
+      <div class="psw ${statPeriod==='week'?'on':''}" onclick="setPeriod('week')">本周</div>
+      <div class="psw ${statPeriod==='month'?'on':''}" onclick="setPeriod('month')">本月</div>
+      <div class="psw ${statPeriod==='year'?'on':''}" onclick="setPeriod('year')">本年</div>
+    </div>
+    <div class="sgrid">
+      <div class="sc"><div class="sl">总患者数</div><div class="sv green">${fp.length}</div><div class="ss">手术 ${fp.length} 台</div></div>
+      <div class="sc"><div class="sl">乳腺癌</div><div class="sv red">${c}</div><div class="ss">手术 ${c} 台</div></div>
+      <div class="sc"><div class="sl">良性肿瘤</div><div class="sv green">${b}</div><div class="ss">手术 ${b} 台</div></div>
+      <div class="sc"><div class="sl">待查病理</div><div class="sv orange">${fp.filter(p=>!p.pathDone).length}</div><div class="ss">需10天内查</div></div>
+    </div>
+    <div class="barchart">
+      <div class="barchart-title">近6个月手术量</div>
+      <div class="bars">${barCols}</div>
+      <div class="bar-legend">
+        <div class="bl"><div class="bl-dot c"></div>乳腺癌</div>
+        <div class="bl"><div class="bl-dot b"></div>良性肿瘤</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-hd">类型分布</div>
+      <div class="card-bd">
+        <div style="display:flex;height:16px;border-radius:8px;overflow:hidden;background:#f0f0f0;margin-bottom:12px">
+          <div style="flex:${c||0};background:rgba(192,57,43,.7);transition:flex .4s"></div>
+          <div style="flex:${b||0};background:var(--p);opacity:.75;transition:flex .4s"></div>
+          ${!fp.length?'<div style="flex:1;background:#f0f0f0"></div>':''}
+        </div>
+        <div style="display:flex;gap:24px">
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:12px;height:12px;border-radius:50%;background:rgba(192,57,43,.75)"></div><div><div style="font-size:14px;font-weight:600">乳腺癌</div><div style="font-size:12px;color:var(--txt3)">${c}例 · ${cp}%</div></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:12px;height:12px;border-radius:50%;background:var(--p);opacity:.8"></div><div><div style="font-size:14px;font-weight:600">良性肿瘤</div><div style="font-size:12px;color:var(--txt3)">${b}例 · ${bp}%</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="sec-lbl">📋 全部病例汇总</div>
+    <div class="sgrid" style="padding-top:8px">
+      <div class="sc"><div class="sl">累计患者</div><div class="sv green">${pts.length}</div></div>
+      <div class="sc"><div class="sl">累计乳腺癌</div><div class="sv red">${allC}</div></div>
+      <div class="sc"><div class="sl">累计良性</div><div class="sv green">${allB}</div></div>
+      <div class="sc"><div class="sl">化疗疗程</div><div class="sv orange">${pts.reduce((s,p)=>s+(p.chemo||[]).length,0)}</div><div class="ss">次</div></div>
+    </div>
+    <div style="height:20px"></div>`
+}
+
+function setPeriod(p) { statPeriod = p; renderStats() }
+
+// ════════════════════════════════════════
+//  SHEET HELPERS
+// ════════════════════════════════════════
+function openSheet(id) {
+  const ov = document.getElementById(id)
+  ov.style.display = 'flex'
+  requestAnimationFrame(() => { requestAnimationFrame(() => ov.classList.add('show')) })
+}
+function closeSheet(id) {
+  const ov = document.getElementById(id)
+  ov.classList.remove('show')
+  setTimeout(() => ov.style.display = 'none', 280)
+}
+
+// ════════════════════════════════════════
+//  DEMO DATA
+// ════════════════════════════════════════
+function initDemo() {
+  if (DB.patients.length) return
+  const t = today()
+  DB.patients = [
+    { id:uid(), name:'李秀兰', admNo:'H2024231', outNo:'C2024089', surgDate:addDays(t,-8), method:'乳腺癌改良根治术', fastPath:'浸润性导管癌', type:'cancer', pathDone:false, rPath:'', ihc:'', dc:'', imgs:[], chemo:[], createdAt:t },
+    { id:uid(), name:'王芳', admNo:'H2024198', outNo:'C2024072', surgDate:addDays(t,-45), method:'乳腺区段切除术', fastPath:'纤维腺瘤', type:'benign', pathDone:true, rPath:'纤维腺瘤，切缘净', ihc:'ER(-) PR(-) HER2(-)', dc:'患者恢复良好，切口愈合佳，无渗出。', imgs:[], chemo:[], createdAt:t },
+    { id:uid(), name:'陈美华', admNo:'H2024155', outNo:'C2024061', surgDate:addDays(t,-92), method:'乳腺癌保乳术+腋窝清扫', fastPath:'浸润性导管癌 II级', type:'cancer', pathDone:true, rPath:'浸润性导管癌，Nottingham分级II级，切缘净', ihc:'ER(+90%) PR(+60%) HER2(2+) Ki67 25%', dc:'术后恢复顺利，已完成第1-4疗程AC方案化疗。', imgs:[], chemo:[{id:uid(),date:addDays(t,-60)},{id:uid(),date:addDays(t,-39)},{id:uid(),date:addDays(t,-18)}], createdAt:t }
+  ]
+  save()
+}
+
+// ════════════════════════════════════════
+//  SERVICE WORKER REGISTRATION
+// ════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {})
+  })
+}
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+initDemo()
+renderList()
+</script>
+</body>
+</html>
