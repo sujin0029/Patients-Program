@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>乳腺外科临床管理系统</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1e7a6e;
+  --green-dark:#145f55;
+  --green-light:#e8f5f3;
+  --green-mid:#c5e8e3;
+  --red:#d93025;
+  --red-light:#fce8e6;
+  --orange:#b45309;
+  --orange-light:#fef3c7;
+  --blue:#1a56db;
+  --blue-light:#ebf5ff;
+  --purple:#6d28d9;
+  --purple-light:#ede9fe;
+  --text:#1f2937;
+  --text-2:#4b5563;
+  --text-3:#9ca3af;
+  --border:#e5e7eb;
+  --border-2:#d1d5db;
+  --bg:#f9fafb;
+  --white:#ffffff;
+  --sidebar-w:220px;
+  --font:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  --r:8px;
+}
+html,body{height:100%;overflow:hidden;font-family:var(--font);color:var(--text);background:var(--bg);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* ══ LEFT NAV ══ */
+#sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sb-logo{padding:18px 16px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.sb-logo-icon{width:32px;height:32px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.sb-logo-text{font-size:13.5px;font-weight:700;color:var(--text);line-height:1.2}
+.sb-logo-sub{font-size:10.5px;color:var(--text-3);margin-top:1px}
+.sb-section{padding:14px 12px 4px;font-size:10.5px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 12px;margin:1px 6px;border-radius:6px;cursor:pointer;font-size:13.5px;color:var(--text-2);font-weight:500;transition:all .12s}
+.sb-item:hover{background:#f3f4f6;color:var(--text)}
+.sb-item.on{background:var(--green-light);color:var(--green);font-weight:600}
+.sb-item-ico{font-size:15px;width:18px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;font-weight:700}
+.sb-bottom{margin-top:auto;border-top:1px solid var(--border);padding:10px 6px}
+.sb-btn{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:6px;cursor:pointer;color:var(--text-2);font-size:12.5px;transition:all .12s}
+.sb-btn:hover{background:#f3f4f6;color:var(--text)}
+.sb-token-row{display:flex;align-items:center;gap:6px;margin:4px 6px 2px;padding:6px 10px;background:#f9fafb;border:1px solid var(--border);border-radius:6px}
+.sb-token-inp{flex:1;border:none;outline:none;background:transparent;font-size:11.5px;color:var(--text);font-family:var(--font)}
+.sb-token-inp::placeholder{color:var(--text-3)}
+.sb-sync-status{padding:2px 12px 6px;font-size:11px;color:var(--text-3)}
+
+/* ══ MAIN ══ */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg)}
+#topbar{height:52px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0}
+.tb-title{font-size:15px;font-weight:700;color:var(--text)}
+.tb-sub{font-size:12px;color:var(--text-3)}
+.tb-space{flex:1}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;border:none;font-family:var(--font);font-weight:500;transition:all .12s;text-decoration:none}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:var(--green-dark)}
+.btn-ghost{background:var(--white);color:var(--text-2);border:1px solid var(--border-2)}
+.btn-ghost:hover{background:#f3f4f6}
+.btn-danger-ghost{background:var(--red-light);color:var(--red);border:1px solid #fca5a5}
+.btn-sm{padding:4px 10px;font-size:12px}
+
+/* ══ CONTENT ══ */
+#content{flex:1;display:flex;overflow:hidden}
+.view{display:none;flex:1;overflow-y:auto;padding:20px}
+.view.on{display:block}
+.vflex{display:none;flex:1;overflow:hidden}
+.vflex.on{display:flex}
+
+/* ══ PATIENT LIST ══ */
+#ptl-pane{width:280px;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+#ptl-search-bar{padding:10px;border-bottom:1px solid var(--border)}
+.ptl-search-inner{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px}
+.ptl-search-inner input{border:none;outline:none;background:transparent;font-size:13px;font-family:var(--font);flex:1;color:var(--text)}
+.ptl-search-inner input::placeholder{color:var(--text-3)}
+#ptl-list{flex:1;overflow-y:auto}
+#ptl-footer{padding:10px;border-top:1px solid var(--border)}
+.pti{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.pti:hover{background:#f9fafb}
+.pti.on{background:var(--green-light)}
+.pti-av{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+.pti-av.cancer{background:#fee2e2;color:#b91c1c}
+.pti-av.benign{background:var(--green-light);color:var(--green)}
+.pti-name{font-size:13.5px;font-weight:600;color:var(--text)}
+.pti-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.pti-tags{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+
+/* ══ DETAIL PANE ══ */
+#ptd-pane{flex:1;overflow-y:auto;background:var(--bg);min-width:0}
+#ptd-content{min-height:100%}
+
+/* ── Detail header ── */
+.dh{background:linear-gradient(135deg,#1a5c52 0%,#1e7a6e 100%);padding:20px 24px;display:flex;gap:14px;align-items:flex-start}
+.dh-av{width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0}
+.dh-name{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.dh-info{display:flex;gap:18px;margin-top:5px;flex-wrap:wrap}
+.dh-info-item{font-size:12px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:4px}
+.dh-method{font-size:13px;color:rgba(255,255,255,.85);margin-top:6px}
+.dh-actions{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.dh-action-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-family:var(--font);font-size:11px;font-weight:500;transition:all .12s;min-width:44px}
+.dh-action-btn:hover{background:rgba(255,255,255,.2)}
+.dh-action-btn .ico{font-size:16px}
+.dh-action-btn.del{border-color:rgba(255,100,100,.4);background:rgba(255,80,80,.12)}
+.dh-action-btn.del:hover{background:rgba(255,80,80,.22)}
+
+/* ── Detail tabs ── */
+.det-tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 16px;overflow-x:auto}
+.det-tab{padding:11px 14px;font-size:13px;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-weight:500;display:flex;align-items:center;gap:6px;transition:all .12s}
+.det-tab:hover{color:var(--text)}
+.det-tab.on{color:var(--green);border-bottom-color:var(--green);font-weight:600}
+
+/* ── Detail body ── */
+.det-body{padding:18px 20px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.det-body.single{grid-template-columns:1fr}
+.det-body.triple{grid-template-columns:1fr 1fr 1fr}
+
+/* ── Cards ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.card-head{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13.5px;font-weight:600;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-body{padding:0}
+
+/* ── Info table ── */
+.itbl{width:100%;border-collapse:collapse}
+.itbl td{padding:9px 16px;border-bottom:1px solid var(--border);font-size:13.5px;vertical-align:top}
+.itbl tr:last-child td{border:none}
+.itbl .k{color:var(--text-3);width:88px;white-space:nowrap;font-weight:500}
+.itbl .v{color:var(--text)}
+
+/* ── Tags ── */
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11.5px;font-weight:600}
+.tag-cancer{background:#fee2e2;color:#b91c1c}
+.tag-benign{background:var(--green-light);color:var(--green)}
+.tag-pending{background:var(--orange-light);color:var(--orange)}
+.tag-done{background:var(--green-light);color:var(--green)}
+.tag-lumA{background:var(--blue-light);color:var(--blue)}
+.tag-lumB{background:#d1fae5;color:#065f46}
+.tag-her2{background:var(--purple-light);color:var(--purple)}
+.tag-tnbc{background:#ffedd5;color:#9a3412}
+.tag-unknown{background:#f3f4f6;color:#6b7280}
+.tag-alert{background:#fee2e2;color:#b91c1c}
+
+/* ── Stage/Subtype boxes ── */
+.stage-card{border-radius:var(--r);padding:18px;color:#fff;background:linear-gradient(135deg,#1e3a5f,#2563eb)}
+.sub-card{border-radius:var(--r);padding:18px;color:#fff}
+.sub-card.lumA{background:linear-gradient(135deg,#1e40af,#3b82f6)}
+.sub-card.lumB{background:linear-gradient(135deg,#065f46,#10b981)}
+.sub-card.her2{background:linear-gradient(135deg,#5b21b6,#8b5cf6)}
+.sub-card.tnbc{background:linear-gradient(135deg,#9a3412,#f97316)}
+.sub-card.unknown{background:linear-gradient(135deg,#374151,#6b7280)}
+.stage-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.65;margin-bottom:6px}
+.stage-value{font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1}
+.stage-desc{font-size:12px;opacity:.7;margin-top:6px}
+.sub-name{font-size:17px;font-weight:800}
+.sub-desc{font-size:12px;opacity:.75;margin-top:4px;line-height:1.5}
+
+/* ── Treatment box ── */
+.treat-card{border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.treat-head{padding:10px 14px;background:var(--green-light);font-size:12px;font-weight:700;color:var(--green-dark);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--green-mid)}
+.treat-item{display:flex;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-2);line-height:1.5}
+.treat-item:last-child{border:none}
+.treat-item::before{content:'›';color:var(--green);font-weight:700;flex-shrink:0;font-size:14px;line-height:1.4}
+.treat-note{padding:8px 14px;font-size:11.5px;color:var(--text-3);background:#fafafa;border-top:1px solid var(--border)}
+
+/* ── IHC table ── */
+.ihc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px}
+.ihc-item{padding:10px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg)}
+.ihc-name{font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.ihc-val{font-size:15px;font-weight:700;margin-top:3px}
+.ihc-item.pos .ihc-val{color:var(--red)}
+.ihc-item.neg .ihc-val{color:#374151}
+.ihc-item.eq .ihc-val{color:var(--orange)}
+
+/* ── Path report ── */
+.path-card{border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:8px}
+.path-card-hd{padding:9px 13px;background:#f9fafb;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-bottom:1px solid transparent;transition:all .12s}
+.path-card-hd:hover{background:var(--green-light)}
+.path-card-hd.open{background:var(--green-light);border-bottom-color:var(--green-mid)}
+.path-card-body{display:none;padding:14px;font-size:13px;line-height:1.85;white-space:pre-wrap;color:var(--text-2);max-height:400px;overflow-y:auto}
+
+/* ── Side effects ── */
+.se-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.se-row:last-child{border:none}
+.se-name{width:110px;font-size:13px;font-weight:500;color:var(--text-2);flex-shrink:0}
+.se-dots{display:flex;gap:5px}
+.se-dot{width:28px;height:28px;border-radius:6px;border:1.5px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:var(--text-3);transition:all .12s}
+.se-dot.g0.on{background:#dcfce7;border-color:#86efac;color:#15803d}
+.se-dot.g1.on{background:#fef9c3;border-color:#fde047;color:#854d0e}
+.se-dot.g2.on{background:#ffedd5;border-color:#fb923c;color:#c2410c}
+.se-dot.g3.on{background:#fecaca;border-color:#f87171;color:#b91c1c}
+.se-dot.g4.on{background:#7f1d1d;border-color:#7f1d1d;color:#fff}
+
+/* ── Chemo timeline ── */
+.chemo-tl{padding-left:24px;position:relative}
+.chemo-tl::before{content:'';position:absolute;left:7px;top:8px;bottom:8px;width:1.5px;background:var(--border)}
+.chemo-node{position:relative;margin-bottom:12px}
+.chemo-node::before{content:'';position:absolute;left:-19px;top:14px;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--white);box-shadow:0 0 0 2px var(--green)}
+.chemo-inner{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.chemo-title{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.chemo-meta{font-size:12px;color:var(--text-3);margin-top:3px}
+.chemo-drugs{font-size:13px;color:var(--text-2);margin-top:6px;line-height:1.6;white-space:pre-line}
+.chemo-se{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.chemo-se-title{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.chemo-se-tags{display:flex;flex-wrap:wrap;gap:5px}
+.se-tag{padding:2px 9px;border-radius:20px;font-size:11.5px;font-weight:600}
+.se-tag-0{background:#dcfce7;color:#15803d}
+.se-tag-1{background:#fef9c3;color:#854d0e}
+.se-tag-2{background:#ffedd5;color:#c2410c}
+.se-tag-3{background:#fecaca;color:#b91c1c}
+.se-tag-4{background:#7f1d1d;color:#fff}
+
+/* ── Lab results ── */
+.lab-alert-bar{background:#fff5f5;border:1px solid #fca5a5;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start}
+.lab-alert-title{font-weight:700;color:#b91c1c;font-size:13px;margin-bottom:3px}
+.lab-alert-body{font-size:12.5px;color:#7f1d1d;line-height:1.6}
+.lab-section-title{font-size:11.5px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;padding:12px 16px 6px}
+.lab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;padding:0 16px 14px}
+.lab-cell{padding:10px 12px;border:1px solid var(--border);border-radius:6px;background:var(--white)}
+.lab-cell.alert{border-color:#fca5a5;background:#fff5f5}
+.lab-cell-name{font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.2px}
+.lab-cell-val{font-size:17px;font-weight:800;margin:2px 0;letter-spacing:-.5px}
+.lab-cell.alert .lab-cell-val{color:#b91c1c}
+.lab-cell-ref{font-size:11px;color:var(--text-3)}
+.lab-cell-flag{font-size:11px;font-weight:700;color:#b91c1c;margin-top:2px}
+
+/* ── Dashboard ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.stat-card-label{font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px}
+.stat-card-val{font-size:28px;font-weight:800;margin:6px 0 2px;letter-spacing:-1px}
+.stat-card-sub{font-size:11.5px;color:var(--text-3)}
+.stat-green .stat-card-val{color:var(--green)}
+.stat-red .stat-card-val{color:var(--red)}
+.stat-orange .stat-card-val{color:var(--orange)}
+.stat-blue .stat-card-val{color:var(--blue)}
+.dash-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-table{width:100%;border-collapse:collapse}
+.dash-table th{padding:9px 14px;text-align:left;font-size:11.5px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--border);background:#f9fafb}
+.dash-table td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.dash-table tr:last-child td{border:none}
+.dash-table tr:hover td{background:#f9fafb;cursor:pointer}
+.remind-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.remind-row:last-child{border:none}
+.remind-ico{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.remind-ico.ov{background:#fee2e2}
+.remind-ico.soon{background:var(--orange-light)}
+.remind-ico.far{background:var(--green-light)}
+.remind-name{font-size:13.5px;font-weight:600;color:var(--text)}
+.remind-desc{font-size:12px;color:var(--text-3);margin-top:1px}
+.remind-date{font-size:12px;font-weight:600;margin-top:3px}
+.rd-ov{color:var(--red)}.rd-soon{color:var(--orange)}.rd-ok{color:var(--text-3)}
+
+/* ── Stats view ── */
+.bar-wrap{display:flex;align-items:flex-end;gap:6px;height:110px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar-stk{display:flex;flex-direction:column-reverse;width:100%;gap:2px}
+.bar-c{background:rgba(201,48,37,.65);border-radius:3px 3px 0 0;transition:height .4s;min-height:0}
+.bar-b{background:var(--green);opacity:.7;border-radius:3px 3px 0 0;transition:height .4s;min-height:0}
+.bar-lbl{font-size:11px;color:var(--text-3)}
+.dist-bar{height:12px;border-radius:20px;overflow:hidden;background:#f3f4f6;display:flex;margin-bottom:10px}
+.dist-c{background:rgba(201,48,37,.65)}.dist-b{background:var(--green);opacity:.75}
+
+/* ── Forms ── */
+.fg{margin-bottom:14px}
+.fl{font-size:12.5px;font-weight:600;color:var(--text-2);margin-bottom:5px;display:block}
+.fl.req::after{content:' *';color:var(--red)}
+.fi,.ft,.fsel{width:100%;padding:8px 11px;border:1.5px solid var(--border-2);border-radius:6px;font-size:13.5px;font-family:var(--font);color:var(--text);background:var(--white);outline:none;transition:border-color .15s}
+.fi:focus,.ft:focus,.fsel:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(30,122,110,.1)}
+.ft{min-height:80px;resize:vertical;line-height:1.6}
+.fg-r2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg-r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.type-row{display:flex;gap:8px}
+.type-btn{flex:1;padding:9px;border:1.5px solid var(--border);border-radius:6px;text-align:center;cursor:pointer;font-size:13px;font-family:var(--font);background:var(--white);color:var(--text-2);font-weight:500;transition:all .15s}
+.type-btn.on{border-color:var(--green);background:var(--green-light);color:var(--green);font-weight:700}
+
+/* ── TXT import ── */
+.txt-drop{display:flex;align-items:center;gap:12px;background:var(--green-light);border:1.5px dashed var(--green-mid);border-radius:8px;padding:12px 14px;cursor:pointer;transition:background .15s;margin-bottom:8px}
+.txt-drop:hover{background:var(--green-mid)}
+.txt-result{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:9px 13px;font-size:12px;color:#065f46;margin-bottom:10px;display:none}
+
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.overlay.on{display:flex}
+.modal{background:var(--white);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;max-height:88vh;overflow:hidden;width:600px;max-width:92vw}
+.modal-lg{width:820px}
+.modal-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:15px;font-weight:700;color:var(--text)}
+.modal-close{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:5px;cursor:pointer;color:var(--text-3);font-size:17px;transition:all .12s}
+.modal-close:hover{background:#f3f4f6;color:var(--text)}
+.modal-body{padding:18px 20px;overflow-y:auto;flex:1}
+.modal-ft{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;background:#f9fafb}
+
+/* ── Image grid ── */
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;padding:14px 16px}
+.img-thumb{aspect-ratio:1;border-radius:6px;overflow:hidden;border:1px solid var(--border);cursor:pointer;transition:transform .15s}
+.img-thumb:hover{transform:scale(1.04)}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-add-btn{aspect-ratio:1;border-radius:6px;border:1.5px dashed var(--border-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--text-3);cursor:pointer;font-size:11.5px;transition:all .15s}
+.img-add-btn:hover{border-color:var(--green);color:var(--green);background:var(--green-light)}
+
+/* ── Guidelines ── */
+.guide-sidebar{width:272px;border-right:1px solid var(--border);background:var(--white);display:flex;flex-direction:column}
+.guide-sidebar-hd{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13.5px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+.guide-list{flex:1;overflow-y:auto;padding:6px 0}
+.guide-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.guide-item:hover{background:#f9fafb}
+.guide-ico{width:36px;height:36px;background:#fee2e2;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.guide-name{font-size:13px;font-weight:500;color:var(--text)}
+.guide-meta{font-size:11.5px;color:var(--text-3);margin-top:2px}
+.guide-viewer{flex:1;overflow:hidden;display:flex;flex-direction:column;background:var(--bg)}
+
+/* ── Empty ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--text-3)}
+.empty-ico{font-size:48px;margin-bottom:12px;opacity:.5}
+.empty-title{font-size:15px;font-weight:600;color:var(--text-2)}
+.empty-sub{font-size:13px;margin-top:5px;text-align:center;max-width:260px;line-height:1.6}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;right:24px;background:#111827;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:500;opacity:0;transition:all .25s;pointer-events:none;transform:translateY(6px);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+#toast.on{opacity:1;transform:translateY(0)}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+
+/* ── Responsive (iPad) ── */
+@media(max-width:900px){
+  #ptl-pane{width:220px}
+  .det-body{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .dash-2col{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  #sidebar{display:none}
+  #ptl-pane{width:100%;height:220px;border-right:none;border-bottom:1px solid var(--border)}
+  .vflex.on{flex-direction:column}
+  #ptd-pane{flex:1}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ════ SIDEBAR ════ -->
+<div id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">🏥</div>
+    <div>
+      <div class="sb-logo-text">乳腺外科</div>
+      <div class="sb-logo-sub">临床管理系统</div>
+    </div>
+  </div>
+  <div class="sb-section">主菜单</div>
+  <div class="sb-item on" onclick="nav('dashboard')"><span class="sb-item-ico">📊</span>仪表盘</div>
+  <div class="sb-item" onclick="nav('patients')"><span class="sb-item-ico">👥</span>患者管理</div>
+  <div class="sb-item" onclick="nav('reminders')"><span class="sb-item-ico">🔔</span>随访提醒<span class="sb-badge" id="badge" style="display:none">0</span></div>
+  <div class="sb-section">资料库</div>
+  <div class="sb-item" onclick="nav('guidelines')"><span class="sb-item-ico">📚</span>指南文献</div>
+  <div class="sb-item" onclick="nav('stats')"><span class="sb-item-ico">📈</span>统计分析</div>
+  <div class="sb-bottom">
+    <div style="padding:4px 6px 3px;font-size:10.5px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px">☁️ 云同步</div>
+    <div class="sb-token-row">
+      <span style="font-size:12px;color:var(--text-3)">🔑</span>
+      <input class="sb-token-inp" type="password" id="token-inp" placeholder="GitHub Token…" oninput="onToken(this.value)">
+    </div>
+    <div class="sb-sync-status" id="sync-st">未设置</div>
+    <div class="sb-btn" onclick="syncUp()">☁️ 同步到云端</div>
+    <div class="sb-btn" onclick="syncDown()">⬇️ 从云端拉取</div>
+    <div style="height:6px;border-top:1px solid var(--border);margin:6px 0"></div>
+    <div class="sb-btn" onclick="exportData()">📤 导出数据</div>
+    <div class="sb-btn" onclick="startImport('merge')">📥 导入并合并</div>
+    <div class="sb-btn" onclick="startImport('over')">🔄 导入并覆盖</div>
+    <input type="file" id="fi-import" accept=".json" style="display:none" onchange="doImport(event)">
+  </div>
+</div>
+
+<!-- ════ MAIN ════ -->
+<div id="main">
+  <div id="topbar">
+    <div>
+      <div class="tb-title" id="tb-title">仪表盘</div>
+      <div class="tb-sub" id="tb-sub"></div>
+    </div>
+    <div class="tb-space"></div>
+    <div id="tb-actions"></div>
+  </div>
+  <div id="content">
+
+    <!-- Dashboard -->
+    <div class="view on" id="v-dashboard"><div id="dash-body"></div></div>
+
+    <!-- Patients -->
+    <div class="vflex" id="v-patients">
+      <div id="ptl-pane">
+        <div id="ptl-search-bar">
+          <div class="ptl-search-inner">
+            <svg width="14" height="14" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input id="ptl-search-inp" placeholder="搜索患者…" oninput="renderList()">
+          </div>
+        </div>
+        <div id="ptl-list"></div>
+        <div id="ptl-footer">
+          <button class="btn btn-primary" style="width:100%" onclick="openAdd()">+ 新增患者</button>
+        </div>
+      </div>
+      <div id="ptd-pane">
+        <div id="ptd-content">
+          <div class="empty" style="height:100vh"><div class="empty-ico">👈</div><div class="empty-title">从左侧选择患者</div><div class="empty-sub">点击患者查看完整临床信息</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reminders -->
+    <div class="view" id="v-reminders"><div id="remind-body"></div></div>
+
+    <!-- Guidelines -->
+    <div class="vflex" id="v-guidelines">
+      <div class="guide-sidebar">
+        <div class="guide-sidebar-hd">参考指南 <button class="btn btn-primary btn-sm" onclick="openAddGuide()">+ 添加</button></div>
+        <div class="guide-list" id="guide-list"></div>
+      </div>
+      <div class="guide-viewer" id="guide-viewer">
+        <div class="empty" style="height:100%"><div class="empty-ico">📚</div><div class="empty-title">选择指南查看</div><div class="empty-sub">上传PDF后在此阅览</div></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="view" id="v-stats"><div id="stats-body"></div></div>
+
+  </div>
+</div>
+</div>
+
+<!-- ════ MODALS ════ -->
+
+<!-- Add/Edit Patient -->
+<div class="overlay" id="mo-pt">
+<div class="modal modal-lg">
+  <div class="modal-hd"><div class="modal-title" id="mo-pt-title">新增患者</div><div class="modal-close" onclick="closeModal('mo-pt')">✕</div></div>
+  <div class="modal-body">
+    <label class="txt-drop">
+      <input type="file" id="fi-txt-pt" accept=".txt,text/plain" style="display:none" onchange="handleTXT(event)">
+      <div style="font-size:24px">📄</div>
+      <div><div style="font-size:13.5px;font-weight:600;color:var(--green)">导入病理报告 TXT → 自动识别所有字段</div>
+      <div style="font-size:12px;color:var(--text-3);margin-top:2px">离线·无需联网·无需API</div></div>
+      <span style="margin-left:auto;background:var(--green);color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap">选择文件</span>
+    </label>
+    <div id="txt-result" class="txt-result"></div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:4px 0 14px">
+    <div class="fg-r3">
+      <div class="fg"><label class="fl req">患者姓名</label><input class="fi" id="pf-name" placeholder="张三"></div>
+      <div class="fg"><label class="fl req">住院号</label><input class="fi" id="pf-adm" placeholder="424648"></div>
+      <div class="fg"><label class="fl">门诊号</label><input class="fi" id="pf-out" placeholder="0013786700"></div>
+    </div>
+    <div class="fg-r3">
+      <div class="fg"><label class="fl req">手术日期</label><input class="fi" type="date" id="pf-date"></div>
+      <div class="fg"><label class="fl">手术方式</label><input class="fi" id="pf-method" placeholder="乳腺癌保乳术+前哨淋巴结活检"></div>
+      <div class="fg"><label class="fl">淋巴结结果</label><input class="fi" id="pf-lymph" placeholder="SNB 0/2 或 ALND 2/12"></div>
+    </div>
+    <div class="fg"><label class="fl req">肿瘤类型</label>
+      <div class="type-row">
+        <div class="type-btn on" id="tb-cancer" onclick="selType('cancer')">🎗 乳腺癌</div>
+        <div class="type-btn" id="tb-benign" onclick="selType('benign')">🌿 良性肿瘤</div>
+      </div>
+    </div>
+    <div id="cancer-extra">
+      <hr style="border:none;border-top:1px solid var(--border);margin:4px 0 14px">
+      <div style="font-size:11.5px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">🔬 免疫组化 / 分型</div>
+      <div class="fg-r3">
+        <div class="fg"><label class="fl">ER</label><select class="fsel" id="pf-er"><option value="">未知</option><option value="pos">阳性(+)</option><option value="neg">阴性(-)</option></select></div>
+        <div class="fg"><label class="fl">PR</label><select class="fsel" id="pf-pr"><option value="">未知</option><option value="pos">阳性(+)</option><option value="neg">阴性(-)</option></select></div>
+        <div class="fg"><label class="fl">HER2</label><select class="fsel" id="pf-her2"><option value="">未知</option><option value="pos">阳性(3+)</option><option value="neg">阴性</option><option value="eq">不确定(2+)</option></select></div>
+      </div>
+      <div class="fg-r3">
+        <div class="fg"><label class="fl">Ki67(%)</label><input class="fi" id="pf-ki67" type="number" min="0" max="100" placeholder="25"></div>
+        <div class="fg"><label class="fl">T分期</label><select class="fsel" id="pf-tT"><option value="">—</option><option>Tis</option><option>T1a</option><option>T1b</option><option>T1c</option><option>T2</option><option>T3</option><option>T4a</option><option>T4b</option><option>T4c</option><option>T4d</option></select></div>
+        <div class="fg"><label class="fl">N分期</label><select class="fsel" id="pf-tN"><option value="">—</option><option>N0</option><option>N1</option><option>N2</option><option>N3</option></select></div>
+      </div>
+      <div class="fg-r3">
+        <div class="fg"><label class="fl">M分期</label><select class="fsel" id="pf-tM"><option value="">—</option><option>M0</option><option>M1</option></select></div>
+        <div class="fg"><label class="fl">肿瘤大小(cm)</label><input class="fi" id="pf-size" type="number" step="0.1" placeholder="2.4"></div>
+        <div class="fg"><label class="fl">组织学分级</label><select class="fsel" id="pf-grade"><option value="">—</option><option value="1">G1（I级）</option><option value="2">G2（II级）</option><option value="3">G3（III级）</option></select></div>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">备注</label><textarea class="ft" id="pf-note" rows="2" placeholder="其他临床信息…"></textarea></div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-ghost" onclick="closeModal('mo-pt')">取消</button>
+    <button class="btn btn-primary" onclick="savePt()">保存患者</button>
+  </div>
+</div>
+</div>
+
+<!-- Add Pathology -->
+<div class="overlay" id="mo-path">
+<div class="modal modal-lg">
+  <div class="modal-hd"><div class="modal-title">添加病理报告</div><div class="modal-close" onclick="closeModal('mo-path')">✕</div></div>
+  <div class="modal-body">
+    <label class="txt-drop">
+      <input type="file" id="fi-path-txt" accept=".txt" style="display:none" onchange="handlePathTXT(event)">
+      <div style="font-size:22px">📄</div>
+      <div><div style="font-size:13px;font-weight:600;color:var(--green)">导入病理报告TXT → 完整原文保存</div>
+      <div style="font-size:12px;color:var(--text-3)">离线识别 · 完整原文保存 · 可展开查看</div></div>
+    </label>
+    <div id="path-status" style="display:none;font-size:12px;color:var(--green);background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px 12px;margin-bottom:10px"></div>
+    <div class="fg"><label class="fl">病理报告完整原文（TXT导入后自动填入，也可直接粘贴）</label>
+      <textarea class="ft" id="path-full" rows="7" style="font-size:13px;line-height:1.75" placeholder="粘贴或导入病理报告全文…"></textarea>
+    </div>
+    <div class="fg-r3">
+      <div class="fg"><label class="fl">常规病理摘要</label><input class="fi" id="path-rp" placeholder="浸润性导管癌 II级"></div>
+      <div class="fg"><label class="fl">免疫组化摘要</label><input class="fi" id="path-ihc" placeholder="ER(+) PR(+) HER2(1+)"></div>
+      <div class="fg"><label class="fl">淋巴结结果</label><input class="fi" id="path-lymph" placeholder="SNB 0/2"></div>
+    </div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-ghost" onclick="closeModal('mo-path')">取消</button>
+    <button class="btn btn-primary" onclick="savePath()">保存报告</button>
+  </div>
+</div>
+</div>
+
+<!-- Add Lab -->
+<div class="overlay" id="mo-lab">
+<div class="modal modal-lg">
+  <div class="modal-hd"><div class="modal-title">上传检验结果</div><div class="modal-close" onclick="closeModal('mo-lab')">✕</div></div>
+  <div class="modal-body">
+    <div style="font-size:11.5px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">血常规</div>
+    <div class="fg-r3">
+      <div class="fg"><label class="fl">WBC ⚠(×10⁹/L)</label><input class="fi" id="lb-wbc" placeholder="4.0–10.0"></div>
+      <div class="fg"><label class="fl">中性粒 ⚠(×10⁹/L)</label><input class="fi" id="lb-neut" placeholder="1.8–6.3"></div>
+      <div class="fg"><label class="fl">HGB ⚠(g/L)</label><input class="fi" id="lb-hgb" placeholder="115–150"></div>
+    </div>
+    <div class="fg-r3">
+      <div class="fg"><label class="fl">PLT ⚠(×10⁹/L)</label><input class="fi" id="lb-plt" placeholder="100–300"></div>
+      <div class="fg"><label class="fl">RBC(×10¹²/L)</label><input class="fi" id="lb-rbc" placeholder="3.8–5.1"></div>
+      <div class="fg"><label class="fl">HCT(%)</label><input class="fi" id="lb-hct" placeholder="35–45"></div>
+    </div>
+    <div style="font-size:11.5px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin:6px 0 8px">生化</div>
+    <div class="fg-r3">
+      <div class="fg"><label class="fl">ALT ⚠(U/L)</label><input class="fi" id="lb-alt" placeholder="7–40"></div>
+      <div class="fg"><label class="fl">AST ⚠(U/L)</label><input class="fi" id="lb-ast" placeholder="13–35"></div>
+      <div class="fg"><label class="fl">K⁺ ⚠(mmol/L)</label><input class="fi" id="lb-k" placeholder="3.5–5.5"></div>
+    </div>
+    <div class="fg-r3">
+      <div class="fg"><label class="fl">Cr(μmol/L)</label><input class="fi" id="lb-cr" placeholder="44–133"></div>
+      <div class="fg"><label class="fl">Na⁺(mmol/L)</label><input class="fi" id="lb-na" placeholder="135–145"></div>
+      <div class="fg"><label class="fl">GLU(mmol/L)</label><input class="fi" id="lb-glu" placeholder="3.9–6.1"></div>
+    </div>
+    <div style="font-size:11.5px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin:6px 0 8px">尿常规 / 心电图</div>
+    <div class="fg-r3">
+      <div class="fg"><label class="fl">尿蛋白</label><select class="fsel" id="lb-upro"><option value="">—</option><option value="neg">阴性</option><option value="1+">1+</option><option value="2+">2+</option><option value="3+">3+</option></select></div>
+      <div class="fg"><label class="fl">心率(bpm)</label><input class="fi" id="lb-hr" placeholder="60–100"></div>
+      <div class="fg"><label class="fl">QTc ⚠(ms)</label><input class="fi" id="lb-qtc" placeholder="<440"></div>
+    </div>
+    <div class="fg"><label class="fl">心电图描述</label><textarea class="ft" id="lb-ecg" rows="2" placeholder="窦性心律，无异常"></textarea></div>
+    <div class="fg"><label class="fl req">检验日期</label><input class="fi" type="date" id="lb-date"></div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-ghost" onclick="closeModal('mo-lab')">取消</button>
+    <button class="btn btn-primary" onclick="saveLab()">保存并分析</button>
+  </div>
+</div>
+</div>
+
+<!-- Add Chemo -->
+<div class="overlay" id="mo-chemo">
+<div class="modal">
+  <div class="modal-hd"><div class="modal-title">记录化疗 / 用药</div><div class="modal-close" onclick="closeModal('mo-chemo')">✕</div></div>
+  <div class="modal-body">
+    <div class="fg-r2">
+      <div class="fg"><label class="fl req">疗程日期</label><input class="fi" type="date" id="cf-date"></div>
+      <div class="fg"><label class="fl req">方案名称</label><input class="fi" id="cf-scheme" placeholder="AC-T / TC / EC"></div>
+    </div>
+    <div class="fg"><label class="fl">使用药物</label><textarea class="ft" id="cf-drugs" rows="3" placeholder="多柔比星 60mg/m²&#10;环磷酰胺 600mg/m²"></textarea></div>
+    <div class="fg"><label class="fl">备注</label><textarea class="ft" id="cf-note" rows="2" placeholder="剂量调整、特殊情况…"></textarea></div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:6px 0 12px">
+    <div style="font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:10px">副作用登记（CTCAE：0=无 1=轻 2=中 3=重 4=危）</div>
+    <div id="se-form"></div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-ghost" onclick="closeModal('mo-chemo')">取消</button>
+    <button class="btn btn-primary" onclick="saveChemo()">保存</button>
+  </div>
+</div>
+</div>
+
+<!-- Discharge -->
+<div class="overlay" id="mo-dc">
+<div class="modal modal-lg">
+  <div class="modal-hd"><div class="modal-title">出院小结</div><div class="modal-close" onclick="closeModal('mo-dc')">✕</div></div>
+  <div class="modal-body">
+    <div class="fg"><label class="fl">出院小结内容</label><textarea class="ft" id="dc-text" rows="8" placeholder="粘贴出院小结…" style="min-height:140px;line-height:1.75"></textarea></div>
+    <div class="fg">
+      <label class="fl">添加检查图片</label>
+      <label style="display:inline-flex;align-items:center;gap:7px;padding:7px 13px;background:var(--bg);border:1px solid var(--border-2);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-2)">
+        <input type="file" accept="image/*" multiple style="display:none" onchange="addDcImgs(event)">📎 选择图片
+      </label>
+      <div id="dc-previews" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-ghost" onclick="closeModal('mo-dc')">取消</button>
+    <button class="btn btn-primary" onclick="saveDc()">保存</button>
+  </div>
+</div>
+</div>
+
+<!-- Add Guideline -->
+<div class="overlay" id="mo-guide">
+<div class="modal">
+  <div class="modal-hd"><div class="modal-title">添加参考指南</div><div class="modal-close" onclick="closeModal('mo-guide')">✕</div></div>
+  <div class="modal-body">
+    <div class="fg"><label class="fl req">指南名称</label><input class="fi" id="gf-name" placeholder="CSCO乳腺癌诊疗指南2024"></div>
+    <div class="fg"><label class="fl">版本年份</label><input class="fi" id="gf-year" placeholder="2024"></div>
+    <div class="fg"><label class="fl">上传PDF</label>
+      <label style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--green-light);border:1.5px dashed var(--green-mid);border-radius:8px;cursor:pointer">
+        <input type="file" accept=".pdf,application/pdf" id="fi-guide-pdf" style="display:none" onchange="handleGuidePDF(event)">
+        <span style="font-size:20px">📄</span>
+        <span style="font-size:13px;color:var(--green)" id="gf-file-name">点击选择PDF文件（最大50MB）</span>
+      </label>
+    </div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-ghost" onclick="closeModal('mo-guide')">取消</button>
+    <button class="btn btn-primary" onclick="saveGuide()">添加指南</button>
+  </div>
+</div>
+</div>
+
+<div id="toast"></div>
+<input type="file" id="fi-exam-img" accept="image/*" multiple style="display:none" onchange="addExamImgs(event)">
+
+<script>
+'use strict'
+
+// ════ DATA ════
+var DB = (function(){
+  try{ return JSON.parse(localStorage.getItem('bc_v4')||'null')||{patients:[],guidelines:[]} }catch(e){ return {patients:[],guidelines:[]} }
+})()
+
+function dbSave(){
+  try{ localStorage.setItem('bc_v4',JSON.stringify(DB)) }catch(e){}
+  clearTimeout(dbSave.t)
+  dbSave.t = setTimeout(function(){ syncUp(true) }, 5000)
+}
+
+// ════ HELPERS ════
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2) }
+function today(){ return new Date().toISOString().slice(0,10) }
+function addDays(s,n){ var d=new Date(s+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10) }
+function addMonths(s,n){ var d=new Date(s+'T00:00:00'); d.setMonth(d.getMonth()+n); return d.toISOString().slice(0,10) }
+function diffDays(s){ var n=new Date(); n.setHours(0,0,0,0); return Math.round((new Date(s+'T00:00:00')-n)/86400000) }
+function fmtCN(s){ if(!s) return '未填写'; var d=new Date(s+'T00:00:00'); return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日' }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+function toast(msg,dur){ var t=document.getElementById('toast'); t.textContent=msg; t.classList.add('on'); setTimeout(function(){ t.classList.remove('on') },dur||2500) }
+function openModal(id){ document.getElementById(id).classList.add('on') }
+function closeModal(id){ document.getElementById(id).classList.remove('on') }
+function el(id){ return document.getElementById(id) }
+function setV(id,v){ var e=el(id); if(e) e.value=v||'' }
+function getV(id){ var e=el(id); return e?e.value.trim():'' }
+
+// ════ MIGRATION ════
+function migrate(){
+  var changed=false
+  DB.patients.forEach(function(p){
+    if(!p.pathReports){ p.pathReports=[]; if(p.rPath||p.ihc){ p.pathReports.push({id:uid(),date:p.surgDate||today(),fullText:(p.rPath||'')+(p.ihc?'\n\n'+p.ihc:''),summary:(p.rPath||'').substring(0,60),rp:p.rPath||'',ihc:p.ihc||'',lymph:p.fastPath||p.lymph||''}) } changed=true }
+    if(!p.lymph){ p.lymph=p.fastPath||''; changed=true }
+    if(!p.labs) p.labs=[]
+    if(!p.chemo) p.chemo=[]
+    if(!p.imgs) p.imgs=[]
+  })
+  if(changed) try{ localStorage.setItem('bc_v4',JSON.stringify(DB)) }catch(e){}
+}
+
+// ════ CLINICAL ENGINE ════
+function subtype(p){
+  var er=p.er,pr=p.pr,h2=p.her2,k=parseFloat(p.ki67)||0
+  if(!er&&!pr&&!h2) return {code:'unknown',name:'未知分型',cls:'unknown',desc:'请完善免疫组化'}
+  if(er==='neg'&&pr==='neg'&&h2==='neg') return {code:'tnbc',name:'TNBC',cls:'tnbc',desc:'三阴性乳腺癌'}
+  if(h2==='pos'){
+    if(er==='pos'||pr==='pos') return {code:'lumBH',name:'Luminal B/HER2+',cls:'her2',desc:'HR阳性 HER2阳性'}
+    return {code:'her2',name:'HER2过表达型',cls:'her2',desc:'HER2阳性 HR阴性'}
+  }
+  if(er==='pos'||pr==='pos'){
+    if(k>0&&k<14) return {code:'lumA',name:'Luminal A',cls:'lumA',desc:'HR阳性 HER2阴性 低增殖'}
+    if(k>=14) return {code:'lumB',name:'Luminal B/HER2-',cls:'lumB',desc:'HR阳性 HER2阴性 高增殖'}
+    return {code:'lumA',name:'Luminal A',cls:'lumA',desc:'HR阳性 HER2阴性'}
+  }
+  return {code:'unknown',name:'未知分型',cls:'unknown',desc:'数据不足'}
+}
+
+function stage(p){
+  var T=p.tT||'',N=p.tN||'',M=p.tM||''
+  if(!T&&!N&&!M) return {s:'—',d:'请填写TNM'}
+  if(M==='M1') return {s:'IV期',d:T+' '+N+' M1'}
+  var tv={Tis:0,T1a:1,T1b:1,T1c:1,T2:2,T3:3,T4a:4,T4b:4,T4c:4,T4d:4}[T]
+  var nv={N0:0,N1:1,N2:2,N3:3}[N]
+  if(tv===undefined||nv===undefined) return {s:'—',d:T+' '+N+' '+(M||'M0')}
+  if(tv===0&&nv===0) return {s:'0期',d:T+' '+N}
+  if(tv===1&&nv===0) return {s:'I期',d:T+' '+N+' M0'}
+  if((tv===1&&nv===1)||(tv===2&&nv===0)) return {s:'IIA期',d:T+' '+N+' M0'}
+  if((tv===2&&nv===1)||(tv===3&&nv===0)) return {s:'IIB期',d:T+' '+N+' M0'}
+  if(tv<=3&&nv===2) return {s:'IIIA期',d:T+' '+N+' M0'}
+  if(tv===4&&nv<=1) return {s:'IIIB期',d:T+' '+N+' M0'}
+  if(nv===3) return {s:'IIIC期',d:T+' '+N+' M0'}
+  return {s:'—',d:T+' '+N}
+}
+
+function treatment(p){
+  var sub=subtype(p),stg=stage(p),s=stg.s,recs=[]
+  if(p.type!=='cancer') return ['良性肿瘤：术后定期随访，无需辅助化疗']
+  if(sub.code==='lumA'){
+    recs.push('内分泌治疗：他莫昔芬（绝经前）5–10年 / AI（绝经后）5年')
+    if(s.indexOf('II')>=0||s.indexOf('III')>=0) recs.push('辅助化疗：可考虑TC×4（高危患者）')
+    recs.push('OFS：高危绝经前患者推荐')
+  } else if(sub.code==='lumB'||sub.code==='lumBH'){
+    recs.push('内分泌治疗：AI（绝经后）/ 他莫昔芬+OFS（绝经前）')
+    recs.push('辅助化疗：AC×4→T×4 或 TC×4')
+    if(sub.code==='lumBH'){ recs.push('靶向治疗：曲妥珠单抗 1年'); if(s.indexOf('II')>=0||s.indexOf('III')>=0) recs.push('双靶强化：+帕妥珠单抗（高危）') }
+  } else if(sub.code==='her2'){
+    recs.push('靶向治疗：曲妥珠单抗 1年（必须）')
+    recs.push('化疗：AC×4→TH×4 或 TCbH×6')
+    recs.push('双靶：曲妥珠单抗+帕妥珠单抗（高危）')
+    recs.push('non-pCR辅助强化：T-DM1')
+  } else if(sub.code==='tnbc'){
+    recs.push('化疗：AC×4→T×4 或 TC×6')
+    recs.push('BRCA突变阳性：奥拉帕利 1年')
+    if(s.indexOf('II')>=0||s.indexOf('III')>=0) recs.push('免疫治疗：帕博利珠单抗+化疗')
+    recs.push('non-pCR：卡培他滨 8周期')
+  } else {
+    recs.push('请完善ER/PR/HER2/Ki67以获取精准推荐')
+    recs.push('参考：CSCO 2024 / NCCN 2024')
+  }
+  return recs
+}
+
+// ════ LAB ════
+var LREF={
+  wbc:{name:'WBC',unit:'×10⁹/L',lo:4,hi:10,plo:2,phi:30},
+  neut:{name:'中性粒',unit:'×10⁹/L',lo:1.8,hi:6.3,plo:.5,phi:null},
+  hgb:{name:'HGB',unit:'g/L',lo:115,hi:150,plo:60,phi:null},
+  plt:{name:'PLT',unit:'×10⁹/L',lo:100,hi:300,plo:20,phi:1000},
+  rbc:{name:'RBC',unit:'×10¹²/L',lo:3.8,hi:5.1},
+  hct:{name:'HCT',unit:'%',lo:35,hi:45},
+  alt:{name:'ALT',unit:'U/L',lo:0,hi:40,phi:500},
+  ast:{name:'AST',unit:'U/L',lo:0,hi:35,phi:500},
+  k:{name:'K⁺',unit:'mmol/L',lo:3.5,hi:5.5,plo:2.5,phi:6.5},
+  cr:{name:'Cr',unit:'μmol/L',lo:44,hi:133,phi:500},
+  na:{name:'Na⁺',unit:'mmol/L',lo:135,hi:145,plo:120,phi:155},
+  glu:{name:'GLU',unit:'mmol/L',lo:3.9,hi:6.1,plo:2.2,phi:22},
+  hr:{name:'心率',unit:'bpm',lo:60,hi:100,plo:40,phi:150},
+  qtc:{name:'QTc',unit:'ms',lo:0,hi:440,phi:500}
+}
+function chkLab(k,v){
+  if(v===''||v===null||v===undefined) return null
+  var n=parseFloat(v); if(isNaN(n)) return null
+  var r=LREF[k]; if(!r) return null
+  var ok='normal',flag=''
+  if(r.plo&&n<r.plo){ok='alert';flag='⚠️ 危急低值'}
+  else if(r.phi&&n>r.phi){ok='alert';flag='⚠️ 危急高值'}
+  else if(n<r.lo){ok='alert';flag='↓ 偏低'}
+  else if(n>r.hi){ok='alert';flag='↑ 偏高'}
+  return {name:r.name,val:n,unit:r.unit,ref:r.lo+'–'+r.hi,ok:ok,flag:flag}
+}
+function labAlerts(lab){
+  var a=[]
+  Object.keys(LREF).forEach(function(k){ if(lab[k]!==undefined&&lab[k]!==''){var r=chkLab(k,lab[k]);if(r&&r.ok!=='normal')a.push(r)} })
+  if(lab.upro&&lab.upro!=='neg'&&lab.upro!=='') a.push({name:'尿蛋白',val:lab.upro,unit:'',ok:'alert',flag:'阳性'})
+  if(lab.ecg&&!/正常|无异常/.test(lab.ecg)) a.push({name:'心电图',val:lab.ecg,unit:'',ok:'alert',flag:'描述异常'})
+  return a
+}
+
+// ════ REMINDERS ════
+function getReminders(){
+  var all=[],now=today()
+  DB.patients.forEach(function(p){
+    if(!p.surgDate) return
+    if(!(p.pathReports||[]).length) all.push({pid:p.id,name:p.name,date:addDays(p.surgDate,10),label:'查询病理结果',ico:'🔬'})
+    var d10=addDays(p.surgDate,10)
+    if(diffDays(d10)>=-3) all.push({pid:p.id,name:p.name,date:d10,label:'术后第10天联系患者',ico:'📞'})
+    for(var m=3;m<=60;m+=3){
+      var d=addMonths(p.surgDate,m)
+      if(d<now&&diffDays(d)<-14) continue
+      if(diffDays(d)>400) break
+      all.push({pid:p.id,name:p.name,date:d,label:'术后'+(m%12===0?m/12+'年':m+'个月')+'随访',ico:'📅'})
+    }
+    ;(p.chemo||[]).forEach(function(c,i){
+      var d=addDays(c.date,7); if(diffDays(d)<-14) return
+      all.push({pid:p.id,name:p.name,date:d,label:'第'+(i+1)+'疗程化疗后第7天联系',ico:'💊'})
+    })
+  })
+  return all.sort(function(a,b){return a.date.localeCompare(b.date)})
+}
+
+// ════ TXT PARSER ════
+function parseTXT(txt){
+  var r={},t=txt.replace(/\r/g,'')
+  var nm=t.match(/^([\u4e00-\u9fa5]{2,6})[;；\s]/)
+  if(nm) r.name=nm[1]
+  var adm=t.match(/[;；\s]([0-9]{5,10})[;；\s]/)
+  if(adm&&!adm[1].startsWith('00')) r.admNo=adm[1]
+  var out=t.match(/[;；\s](00[0-9]{6,12})[;；\s]/)
+  if(out) r.outNo=out[1]
+  var dt=t.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/)
+  if(dt) r.surgDate=dt[1]+'-'+dt[2].padStart(2,'0')+'-'+dt[3].padStart(2,'0')
+  var mx=[[/保乳.*前哨|前哨.*保乳/,'乳腺癌保乳术+前哨淋巴结活检'],[/改良根治|改良/,'乳腺癌改良根治术'],[/根治/,'乳腺癌根治术'],[/肿切|肿块切除/,'乳腺肿块切除术'],[/区段切除/,'乳腺区段切除术']]
+  for(var i=0;i<mx.length;i++){if(mx[i][0].test(t)){r.method=mx[i][1];break}}
+  var sz=t.match(/镜下肿瘤最大径[：:]\s*([\d.]+)\s*cm/i)||t.match(/最大径([\d.]+)cm/)
+  if(sz) r.size=sz[1]
+  var gm=t.match(/组织学分级[：:][^,，;\n]*?(I{1,3})[级\s（(]/)
+  if(gm) r.grade={I:'1',II:'2',III:'3'}[gm[1]]||'1'
+  else{var sm=t.match(/总分([5-9])分/);if(sm){var sc=parseInt(sm[1]);r.grade=sc<=5?'1':sc<=7?'2':'3'}}
+  var erM=t.match(/ER[\s(（]([^)）\n]{1,20})[)）]?/)
+  if(erM) r.er=/\+|阳|[1-9]/.test(erM[1])?'pos':'neg'
+  var prM=t.match(/PR[\s(（]([^)）\n]{1,20})[)）]?/)
+  if(prM) r.pr=/\+|阳|[1-9]/.test(prM[1])?'pos':'neg'
+  var h2=t.match(/[Hh]er[-\s]?2[\s(（]([^)）\n]{1,15})[)）]/)||t.match(/HER2[\s(（]([^)）\n]{1,15})[)）]/)
+  if(h2) r.her2=/3\+/.test(h2[1])?'pos':/2\+/.test(h2[1])?'eq':'neg'
+  var ki=t.match(/[Kk]i[-\s]?67[\s(（]([\d]+)%?/)
+  if(ki) r.ki67=ki[1]
+  var tM2=t.match(/pT[：:]\s*(T[\w]+)/); if(tM2) r.tT=tM2[1]
+  var nM2=t.match(/pN[：:]\s*(N[\d\w]+)/); if(nM2) r.tN=nM2[1].replace(/\(.*$/,'').trim()
+  var mM2=t.match(/[Mm][：:]\s*(M[01])/); if(mM2) r.tM=mM2[1]
+  var snb=t.match(/SNB\s*([\d]+\/[\d]+)/)
+  if(snb) r.lymph='SNB '+snb[1]
+  else if(/无淋巴结标本|不适用/.test(t)) r.lymph='N/A（无淋巴结送检）'
+  else{var al=t.match(/淋巴结.*?(\d+).*?\/(\d+).*?转移/);if(al) r.lymph='ALND '+al[1]+'/'+al[2]}
+  var hist=t.match(/组织学类型[：:]\s*([^,，;；\n]{4,40})/)
+  if(hist) r.histType=hist[1].replace(/（[^）]*）/g,'').trim()
+  var ip=[],iRe=/(?:ER|PR|Her-?2|HER2|Ki-?67)[\s(（][^\n]{2,40}/gi,mm
+  while((mm=iRe.exec(t))!==null) ip.push(mm[0].replace(/[,，]\s*$/,'').trim())
+  if(ip.length) r.ihc=[...new Set(ip)].join('；')
+  var rp=[]
+  if(r.histType) rp.push(r.histType)
+  if(r.grade) rp.push('G'+r.grade)
+  var mg=t.match(/切缘([阴阳]性)/);if(mg) rp.push('切缘'+mg[1])
+  if(r.lymph&&r.lymph!=='N/A（无淋巴结送检）') rp.push(r.lymph)
+  r.rp=rp.join('，')
+  return r
+}
+
+// ════ NAVIGATION ════
+var _curView='dashboard', _detailId=null, _dtab=0, _editId=null, _pType='cancer', _spPeriod='month'
+
+function nav(v){
+  document.querySelectorAll('.sb-item').forEach(function(e){ e.classList.remove('on') })
+  var mp={dashboard:0,patients:1,reminders:2,guidelines:4,stats:5}
+  var items=document.querySelectorAll('.sb-item')
+  if(mp[v]!==undefined&&items[mp[v]]) items[mp[v]].classList.add('on')
+  document.querySelectorAll('.view,.vflex').forEach(function(e){ e.classList.remove('on') })
+  var ve=el('v-'+v); if(ve) ve.classList.add('on')
+  _curView=v
+  var titles={dashboard:'仪表盘',patients:'患者管理',reminders:'随访提醒',guidelines:'参考指南',stats:'统计分析'}
+  el('tb-title').textContent=titles[v]||v
+  el('tb-sub').textContent=v==='patients'?'共 '+DB.patients.length+' 位患者':''
+  var acts={patients:'<button class="btn btn-primary" onclick="openAdd()">+ 新增患者</button>',guidelines:'<button class="btn btn-primary" onclick="openAddGuide()">+ 添加指南</button>'}
+  el('tb-actions').innerHTML=acts[v]||''
+  if(v==='dashboard') renderDash()
+  if(v==='patients') renderList()
+  if(v==='reminders') renderReminders()
+  if(v==='guidelines') renderGuides()
+  if(v==='stats') renderStats()
+  updateBadge()
+}
+
+function updateBadge(){
+  var n=getReminders().filter(function(r){return diffDays(r.date)<=0}).length
+  var b=el('badge'); b.style.display=n>0?'inline':'none'; b.textContent=n
+}
+
+// ════ DASHBOARD ════
+function renderDash(){
+  var pts=DB.patients,now=new Date()
+  var thisMonth=pts.filter(function(p){ if(!p.surgDate)return false; var d=new Date(p.surgDate+'T00:00:00'); return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth() })
+  var rems=getReminders(),urg=rems.filter(function(r){return diffDays(r.date)<=0}),soon=rems.filter(function(r){var d=diffDays(r.date);return d>0&&d<=7})
+  var h='<div class="stats-grid">'
+    +'<div class="stat-card stat-green"><div class="stat-card-label">累计患者</div><div class="stat-card-val">'+pts.length+'</div></div>'
+    +'<div class="stat-card stat-red"><div class="stat-card-label">乳腺癌</div><div class="stat-card-val">'+pts.filter(function(p){return p.type==='cancer'}).length+'</div></div>'
+    +'<div class="stat-card stat-orange"><div class="stat-card-label">逾期提醒</div><div class="stat-card-val">'+urg.length+'</div></div>'
+    +'<div class="stat-card stat-blue"><div class="stat-card-label">本月新增</div><div class="stat-card-val">'+thisMonth.length+'</div></div>'
+    +'</div>'
+  h+='<div class="dash-2col">'
+  // Urgent reminders
+  h+='<div class="card"><div class="card-head">⚠️ 逾期提醒 <span class="tag tag-alert">'+urg.length+'</span></div><div class="card-body" style="padding:0 0 2px">'
+  if(!urg.length) h+='<div style="padding:24px;text-align:center;color:var(--text-3)">✓ 暂无逾期提醒</div>'
+  else urg.slice(0,8).forEach(function(r){ h+=remRow(r,true) })
+  h+='</div></div>'
+  // Soon
+  h+='<div class="card"><div class="card-head">📅 7天内到来 <span class="tag tag-pending">'+soon.length+'</span></div><div class="card-body" style="padding:0 0 2px">'
+  if(!soon.length) h+='<div style="padding:24px;text-align:center;color:var(--text-3)">✓ 未来7天无随访</div>'
+  else soon.slice(0,8).forEach(function(r){ h+=remRow(r,false) })
+  h+='</div></div></div>'
+  // Recent table
+  h+='<div class="card" style="margin-top:14px"><div class="card-head">🕐 最近患者</div><div class="card-body" style="padding:0;overflow-x:auto">'
+  h+='<table class="dash-table"><thead><tr><th>姓名</th><th>住院号</th><th>手术日期</th><th>类型</th><th>分型</th><th>分期</th><th>淋巴结</th></tr></thead><tbody>'
+  var rec=[].concat(pts).sort(function(a,b){return(b.createdAt||'').localeCompare(a.createdAt||'')}).slice(0,8)
+  rec.forEach(function(p){
+    var sub=subtype(p),stg=stage(p)
+    h+='<tr onclick="nav(\'patients\');setTimeout(function(){selPt(\''+p.id+'\')},80)">'
+    h+='<td><div style="display:flex;align-items:center;gap:8px"><div class="pti-av '+(p.type==='cancer'?'cancer':'benign')+'" style="width:28px;height:28px;font-size:12px">'+p.name[0]+'</div><b>'+esc(p.name)+'</b></div></td>'
+    h+='<td>'+esc(p.admNo||'—')+'</td><td>'+esc(p.surgDate||'—')+'</td>'
+    h+='<td><span class="tag tag-'+(p.type==='cancer'?'cancer':'benign')+'">'+(p.type==='cancer'?'乳腺癌':'良性')+'</span></td>'
+    h+='<td>'+(p.type==='cancer'?'<span class="tag tag-'+sub.cls+'">'+sub.name+'</span>':'—')+'</td>'
+    h+='<td>'+stg.s+'</td><td>'+esc(p.lymph||'—')+'</td>'
+    h+='</tr>'
+  })
+  h+='</tbody></table></div></div>'
+  el('dash-body').innerHTML=h
+}
+
+function remRow(r,isUrgent){
+  var d=diffDays(r.date),icoCls=d<0?'ov':d<=3?'soon':'far'
+  var dateTxt=d<0?'逾期'+(-d)+'天':d===0?'今天':d===1?'明天':d+'天后'
+  var dateCls=d<0?'rd-ov':d<=3?'rd-soon':'rd-ok'
+  return '<div class="remind-row" style="padding:10px 16px" onclick="nav(\'patients\');setTimeout(function(){selPt(\''+r.pid+'\')},80)">'
+    +'<div class="remind-ico '+icoCls+'">'+r.ico+'</div>'
+    +'<div><div class="remind-name">'+esc(r.name)+'</div>'
+    +'<div class="remind-desc">'+r.label+'</div>'
+    +'<div class="remind-date '+dateCls+'">'+dateTxt+'</div></div></div>'
+}
+
+// ════ PATIENT LIST ════
+function renderList(){
+  var kw=(el('ptl-search-inp')||{}).value||''
+  var list=DB.patients.filter(function(p){ return !kw||p.name.indexOf(kw)>=0||(p.admNo||'').indexOf(kw)>=0||(p.outNo||'').indexOf(kw)>=0 })
+    .sort(function(a,b){return(b.surgDate||'').localeCompare(a.surgDate||'')})
+  var e=el('ptl-list')
+  if(!list.length){ e.innerHTML='<div class="empty" style="padding:40px 20px"><div class="empty-ico">🏥</div><div class="empty-title">'+(kw?'未找到':'暂无患者')+'</div></div>'; return }
+  var h=''
+  list.forEach(function(p){
+    var sub=subtype(p),stg=stage(p)
+    h+='<div class="pti '+(p.id===_detailId?'on':'')+'" onclick="selPt(\''+p.id+'\')">'
+    h+='<div class="pti-av '+(p.type==='cancer'?'cancer':'benign')+'">'+p.name[0]+'</div>'
+    h+='<div style="flex:1;min-width:0"><div class="pti-name">'+esc(p.name)+'</div>'
+    h+='<div class="pti-meta">'+esc(p.admNo||'—')+' · '+esc(p.surgDate||'—')+'</div>'
+    h+='<div class="pti-tags">'
+    h+='<span class="tag tag-'+(p.type==='cancer'?'cancer':'benign')+'">'+(p.type==='cancer'?'乳腺癌':'良性')+'</span>'
+    if(p.type==='cancer') h+='<span class="tag tag-'+sub.cls+'">'+sub.name+'</span>'
+    if(p.type==='cancer'&&stg.s!=='—') h+='<span class="tag" style="background:var(--blue-light);color:var(--blue)">'+stg.s+'</span>'
+    if(!(p.pathReports||[]).length) h+='<span class="tag tag-pending">待病理</span>'
+    h+='</div></div></div>'
+  })
+  e.innerHTML=h
+}
+
+function selPt(id){ _detailId=id; _dtab=0; renderList(); renderDetail(id) }
+
+// ════ PATIENT DETAIL ════
+function renderDetail(id){
+  var p=DB.patients.find(function(x){return x.id===id}); if(!p) return
+  var sub=subtype(p),stg=stage(p)
+  var labAl=(p.labs||[]).reduce(function(n,l){return n+labAlerts(l).length},0)
+  var h='<div class="dh">'
+  h+='<div class="dh-av">'+p.name[0]+'</div>'
+  h+='<div style="flex:1;min-width:0">'
+  h+='<div class="dh-name">'+esc(p.name)+'</div>'
+  h+='<div class="dh-info">'
+  h+='<span class="dh-info-item">🏥 住院号：'+esc(p.admNo||'—')+'</span>'
+  if(p.outNo) h+='<span class="dh-info-item">📋 门诊号：'+esc(p.outNo)+'</span>'
+  h+='<span class="dh-info-item">📅 手术：'+fmtCN(p.surgDate)+'</span>'
+  if(labAl>0) h+='<span style="background:#ef4444;color:#fff;border-radius:20px;padding:2px 9px;font-size:11.5px;font-weight:700">⚠️ '+labAl+'项检验异常</span>'
+  h+='</div>'
+  if(p.method) h+='<div class="dh-method">'+esc(p.method)+'</div>'
+  h+='</div>'
+  h+='<div class="dh-actions">'
+  h+='<div class="dh-action-btn" onclick="_editId=\''+id+'\';openAdd()"><span class="ico">✏️</span>编辑</div>'
+  h+='<div class="dh-action-btn" onclick="window.print()"><span class="ico">🖨️</span>打印</div>'
+  h+='<div class="dh-action-btn del" onclick="delPt(\''+id+'\')"><span class="ico">🗑</span>删除</div>'
+  h+='</div></div>'
+  var tabs=[{ico:'📋',lbl:'基本信息'},{ico:'🔬',lbl:'分型分期'},{ico:'💊',lbl:'化疗记录'},{ico:'🩺',lbl:'检验结果'},{ico:'📁',lbl:'出院材料'}]
+  h+='<div class="det-tabs">'
+  tabs.forEach(function(t,i){
+    h+='<div class="det-tab '+(i===_dtab?'on':'')+'" onclick="switchTab('+i+')">'+t.ico+' '+t.lbl
+    if(i===3&&labAl>0) h+=' <span class="tag tag-alert" style="font-size:11px">'+labAl+'</span>'
+    h+='</div>'
+  })
+  h+='</div><div id="det-body"></div>'
+  el('ptd-content').innerHTML=h
+  renderTab(id)
+}
+
+function switchTab(i){ _dtab=i; renderDetail(_detailId) }
+
+function renderTab(id){
+  var p=DB.patients.find(function(x){return x.id===id}); if(!p) return
+  var e=el('det-body'); if(!e) return
+  var sub=subtype(p),stg=stage(p),h=''
+
+  if(_dtab===0){
+    // Basic info + path reports
+    h='<div class="det-body">'
+    // Basic info card
+    h+='<div class="card"><div class="card-head">基本信息</div>'
+    h+='<div class="card-body"><table class="itbl">'
+    var rows=[['姓名',p.name],['住院号',p.admNo||'—'],['门诊号',p.outNo||'—'],['手术日期',fmtCN(p.surgDate)],['手术方式',p.method||'—'],['淋巴结',p.lymph||'—'],['肿瘤大小',p.size?p.size+'cm':'—'],['组织学分级',p.grade?'G'+p.grade:'—'],['备注',p.note||'—']]
+    rows.forEach(function(r){ h+='<tr><td class="k">'+r[0]+'</td><td class="v">'+esc(r[1])+'</td></tr>' })
+    h+='</table></div></div>'
+    // Pathology reports card
+    h+='<div class="card"><div class="card-head">病理结果 <span class="tag '+((p.pathReports||[]).length>0?'tag-done':'tag-pending')+'">'
+    h+=((p.pathReports||[]).length>0?'已上传'+(p.pathReports||[]).length+'份':'待上传')+'</span></div>'
+    h+='<div class="card-body" style="padding:14px 16px">'
+    if(!(p.pathReports||[]).length){
+      h+='<div style="text-align:center;padding:20px;color:var(--text-3)">暂无病理报告</div>'
+    } else {
+      p.pathReports.forEach(function(r,i){
+        var did='pr_'+p.id+'_'+i
+        h+='<div class="path-card"><div class="path-card-hd" onclick="togglePath(\''+did+'\')">'
+        h+='<div><span style="font-size:13px;font-weight:600;color:var(--green)">报告 '+(i+1)+'</span>'
+        h+='<span style="font-size:12px;color:var(--text-3);margin-left:8px">'+esc(r.date||'')+'</span>'
+        h+='<span style="font-size:12.5px;color:var(--text-2);margin-left:8px">'+esc((r.summary||'').substring(0,50))+'</span></div>'
+        h+='<span style="font-size:12px;color:var(--green)">▼ 展开</span></div>'
+        h+='<div class="path-card-body" id="'+did+'">'+esc(r.fullText||'—')+'</div></div>'
+      })
+    }
+    h+='<button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="openPath(\''+id+'\')">+ 添加病理报告</button>'
+    h+='</div></div></div>'
+
+  } else if(_dtab===1){
+    var recs=treatment(p)
+    h='<div class="det-body">'
+    h+='<div class="stage-card"><div class="stage-label">临床分期 AJCC 8th</div><div class="stage-value">'+stg.s+'</div><div class="stage-desc">'+stg.d+'</div></div>'
+    h+='<div class="sub-card '+sub.cls+'"><div class="stage-label">分子分型</div><div class="sub-name">'+sub.name+'</div><div class="sub-desc">'+sub.desc+'</div></div>'
+    h+='</div>'
+    if(p.type==='cancer'){
+      h+='<div style="padding:0 20px"><div class="card" style="margin-bottom:14px">'
+      h+='<div class="card-head">免疫组化</div>'
+      h+='<div class="ihc-grid">'
+      var ihcRows=[['ER',p.er,{pos:'阳性(+)',neg:'阴性(-)',eq:'?','':'未知'}],['PR',p.pr,{pos:'阳性(+)',neg:'阴性(-)',eq:'?','':'未知'}],['HER2',p.her2,{pos:'3+阳性',neg:'阴性',eq:'2+不确定','':'未知'}],['Ki67',p.ki67,null]]
+      ihcRows.forEach(function(r){
+        var cls=r[1]==='pos'?'pos':r[1]==='neg'?'neg':r[1]==='eq'?'eq':''
+        var val=r[2]?r[2][r[1]]||'未知':(r[1]?r[1]+'%':'未知')
+        h+='<div class="ihc-item '+cls+'"><div class="ihc-name">'+r[0]+'</div><div class="ihc-val">'+val+'</div></div>'
+      })
+      var tnmRows=[['T分期',p.tT||'—'],['N分期',p.tN||'—'],['M分期',p.tM||'—'],['淋巴结',p.lymph||'—']]
+      tnmRows.forEach(function(r){ h+='<div class="ihc-item"><div class="ihc-name">'+r[0]+'</div><div class="ihc-val" style="font-size:14px">'+esc(r[1])+'</div></div>' })
+      h+='</div></div>'
+      h+='<div class="treat-card"><div class="treat-head">📌 指南推荐治疗方案 — '+sub.name+' · '+stg.s+'</div>'
+      recs.forEach(function(r){ h+='<div class="treat-item">'+esc(r)+'</div>' })
+      h+='<div class="treat-note">⚠️ 参考CSCO/NCCN指南，最终方案请结合患者具体情况</div></div></div>'
+    }
+
+  } else if(_dtab===2){
+    var chemo=p.chemo||[]
+    h='<div style="padding:18px 20px">'
+    h+='<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary" onclick="openChemo(\''+id+'\')">+ 添加化疗记录</button></div>'
+    if(!chemo.length){
+      h+='<div class="card"><div class="empty" style="padding:40px"><div class="empty-ico">💊</div><div class="empty-title">暂无化疗记录</div></div></div>'
+    } else {
+      var seColors=['','#fef9c3','#ffedd5','#fecaca','#7f1d1d']
+      var seTxtClrs=['','#854d0e','#c2410c','#b91c1c','#fff']
+      var SE_NAMES=['骨髓抑制','恶心呕吐','脱发','疲乏','周围神经毒性','口腔黏膜炎','腹泻','便秘','心脏毒性','手足综合征','皮疹','肝功损害','肾功损害','过敏反应']
+      h+='<div class="chemo-tl">'
+      chemo.forEach(function(c,i){
+        var se=c.sideEffects||{},hasG2=Object.values(se).some(function(v){return v>1})
+        h+='<div class="chemo-node"><div class="chemo-inner">'
+        h+='<div class="chemo-title">第'+(i+1)+'疗程 <span style="background:var(--green-light);color:var(--green);border-radius:20px;padding:2px 9px;font-size:12px;font-weight:600">'+esc(c.scheme||'—')+'</span>'
+        if(hasG2) h+='<span class="tag tag-alert">⚠️ 副作用≥G2</span>'
+        h+='<button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="delChemo(\''+id+'\','+i+')">删除</button></div>'
+        h+='<div class="chemo-meta">📅 '+fmtCN(c.date)+' · 第7天随访：'+fmtCN(addDays(c.date,7))+'</div>'
+        if(c.drugs) h+='<div class="chemo-drugs">💊 '+esc(c.drugs)+'</div>'
+        if(c.note) h+='<div style="font-size:12px;color:var(--text-3);margin-top:4px;font-style:italic">'+esc(c.note)+'</div>'
+        if(Object.keys(se).length){
+          h+='<div class="chemo-se"><div class="chemo-se-title">副作用记录</div><div class="chemo-se-tags">'
+          SE_NAMES.filter(function(s){return se[s]>0}).forEach(function(s){
+            var g=se[s]
+            h+='<span class="se-tag se-tag-'+g+'">'+s+' G'+g+'</span>'
+          })
+          h+='</div></div>'
+        }
+        h+='</div></div>'
+      })
+      h+='</div>'
+    }
+    h+='</div>'
+
+  } else if(_dtab===3){
+    var labs=p.labs||[]
+    h='<div style="padding:18px 20px">'
+    h+='<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary" onclick="openLab(\''+id+'\')">+ 上传检验结果</button></div>'
+    if(!labs.length){
+      h+='<div class="card"><div class="empty" style="padding:40px"><div class="empty-ico">🩺</div><div class="empty-title">暂无检验结果</div></div></div>'
+    } else {
+      var latest=labs[labs.length-1],latestAl=labAlerts(latest)
+      if(latestAl.length){
+        h+='<div class="lab-alert-bar"><div><div class="lab-alert-title">🚨 最新检验 '+latestAl.length+' 项异常</div>'
+        h+='<div class="lab-alert-body">'+latestAl.map(function(a){return'<b>'+a.name+'</b>: '+a.val+a.unit+' — '+a.flag}).join('；')+'</div></div></div>'
+      }
+      var labKeys=['wbc','neut','hgb','plt','rbc','hct','alt','ast','k','cr','na','glu','hr','qtc']
+      labs.slice().reverse().forEach(function(lab,ri){
+        var als=labAlerts(lab)
+        h+='<div class="card" style="margin-bottom:12px">'
+        h+='<div class="card-head">'+fmtCN(lab.date)+(ri===0?' <span class="tag tag-done">最新</span>':'')
+        h+=(als.length?' <span class="tag tag-alert">⚠️ '+als.length+'项异常</span>':'<span class="tag tag-done">正常</span>')
+        h+='<button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="delLab(\''+id+'\','+(labs.length-1-ri)+')">删除</button></div>'
+        h+='<div class="card-body">'
+        var items=''
+        labKeys.forEach(function(k){var rv=chkLab(k,lab[k]);if(!rv)return;items+='<div class="lab-cell'+(rv.ok!=='normal'?' alert':'')+'"><div class="lab-cell-name">'+rv.name+'</div><div class="lab-cell-val">'+rv.val+'</div><div class="lab-cell-ref">'+rv.ref+' '+rv.unit+'</div>'+(rv.flag?'<div class="lab-cell-flag">'+rv.flag+'</div>':'')+'</div>'})
+        if(items) h+='<div class="lab-section-title">血常规 / 生化</div><div class="lab-grid">'+items+'</div>'
+        if(lab.upro&&lab.upro!=='') h+='<div style="padding:4px 16px 8px;font-size:12.5px;color:var(--text-3)">尿蛋白：<b style="color:var(--text)">'+lab.upro+'</b></div>'
+        if(lab.ecg) h+='<div style="padding:4px 16px 8px;font-size:12.5px;color:var(--text-3)">心电图：<b style="color:var(--text)">'+esc(lab.ecg)+'</b></div>'
+        h+='</div></div>'
+      })
+    }
+    h+='</div>'
+
+  } else if(_dtab===4){
+    h='<div style="padding:18px 20px">'
+    h+='<div class="card" style="margin-bottom:14px">'
+    h+='<div class="card-head">出院小结 <button class="btn btn-ghost btn-sm" onclick="openDc(\''+id+'\')">✏️ 编辑</button></div>'
+    h+='<div class="card-body" style="padding:16px">'
+    h+=(p.dc?'<div style="font-size:13.5px;line-height:1.85;white-space:pre-wrap;color:var(--text-2)">'+esc(p.dc)+'</div>':'<div style="text-align:center;padding:20px;color:var(--text-3)">暂无出院小结</div>')
+    h+='</div></div>'
+    h+='<div class="card"><div class="card-head">检查图片 <span style="color:var(--text-3);font-weight:400;font-size:13px">'+(p.imgs||[]).length+'张</span> <button class="btn btn-ghost btn-sm" onclick="el(\'fi-exam-img\').click()">+ 添加</button></div>'
+    h+='<div class="img-grid">'
+    ;(p.imgs||[]).forEach(function(img,i){ h+='<div class="img-thumb" onclick="viewImg(\''+id+'\','+i+')"><img src="'+img+'" loading="lazy"></div>' })
+    h+='</div></div></div>'
+  }
+  e.innerHTML=h
+}
+
+function togglePath(id){ var e=el(id); if(e) e.style.display=e.style.display==='none'||!e.style.display?'block':'none' }
+
+// ════ ADD/EDIT PATIENT ════
+function openAdd(){
+  var p=_editId?DB.patients.find(function(x){return x.id===_editId}):null
+  el('mo-pt-title').textContent=p?'编辑患者':'新增患者'
+  setV('pf-name',p&&p.name); setV('pf-adm',p&&p.admNo); setV('pf-out',p&&p.outNo)
+  setV('pf-date',p?p.surgDate:today()); setV('pf-method',p&&p.method); setV('pf-lymph',p&&p.lymph)
+  setV('pf-size',p&&p.size); setV('pf-ki67',p&&p.ki67); setV('pf-note',p&&p.note)
+  ;['pf-er','pf-pr','pf-her2','pf-tT','pf-tN','pf-tM','pf-grade'].forEach(function(id){ setV(id,p&&p[id.replace('pf-','').replace('tT','tT').replace('tN','tN').replace('tM','tM')]) })
+  // Fix field mapping
+  if(p){ setV('pf-er',p.er); setV('pf-pr',p.pr); setV('pf-her2',p.her2); setV('pf-tT',p.tT); setV('pf-tN',p.tN); setV('pf-tM',p.tM); setV('pf-grade',p.grade) }
+  _pType=p?p.type||'cancer':'cancer'; selType(_pType)
+  el('txt-result').style.display='none'
+  openModal('mo-pt')
+}
+
+function selType(t){
+  _pType=t
+  el('tb-cancer').classList.toggle('on',t==='cancer')
+  el('tb-benign').classList.toggle('on',t==='benign')
+  el('cancer-extra').style.display=t==='cancer'?'block':'none'
+}
+
+function handleTXT(e){
+  var file=e.target.files[0]; if(!file) return
+  var rd=new FileReader()
+  rd.onload=function(ev){
+    var txt=ev.target.result,r=parseTXT(txt),filled=[]
+    function sv(id,v,lbl){ if(v){ setV(id,v); filled.push(lbl) } }
+    function so(id,v,lbl){ if(v){ var e=el(id); if(e&&[].slice.call(e.options).some(function(o){return o.value===v})){ e.value=v; filled.push(lbl) } } }
+    sv('pf-name',r.name,'姓名'); sv('pf-adm',r.admNo,'住院号'); sv('pf-out',r.outNo,'门诊号')
+    sv('pf-date',r.surgDate,'手术日期'); sv('pf-method',r.method,'手术方式'); sv('pf-lymph',r.lymph,'淋巴结')
+    sv('pf-size',r.size,'肿瘤大小'); sv('pf-ki67',r.ki67,'Ki67')
+    so('pf-er',r.er,'ER'); so('pf-pr',r.pr,'PR'); so('pf-her2',r.her2,'HER2')
+    so('pf-grade',r.grade,'分级'); so('pf-tT',r.tT,'T分期'); so('pf-tN',r.tN,'N分期'); so('pf-tM',r.tM,'M分期')
+    if(r.histType) sv('pf-note',r.histType,'组织学')
+    selType('cancer')
+    window._txtPathCache={fullText:txt,rp:r.rp,ihc:r.ihc,lymph:r.lymph}
+    var re=el('txt-result'); re.style.display='block'
+    re.innerHTML='✅ 识别完成，已填入：'+filled.join('、')+'<br><span style="color:#065f46;font-size:11.5px">病理原文已缓存，保存患者后在病理报告标签可一键导入</span>'
+    toast('✅ TXT识别完成，已填入 '+filled.length+' 个字段',3000)
+  }
+  rd.readAsText(file,'UTF-8'); e.target.value=''
+}
+
+function savePt(){
+  var name=getV('pf-name'),admNo=getV('pf-adm'),surgDate=getV('pf-date')
+  if(!name||!admNo||!surgDate){ toast('请填写姓名、住院号和手术日期'); return }
+  var data={name:name,admNo:admNo,outNo:getV('pf-out'),surgDate:surgDate,method:getV('pf-method'),lymph:getV('pf-lymph'),type:_pType,
+    er:getV('pf-er'),pr:getV('pf-pr'),her2:getV('pf-her2'),ki67:getV('pf-ki67'),
+    tT:getV('pf-tT'),tN:getV('pf-tN'),tM:getV('pf-tM'),size:getV('pf-size'),grade:getV('pf-grade'),note:getV('pf-note'),updatedAt:new Date().toISOString()}
+  if(_editId){
+    var idx=DB.patients.findIndex(function(p){return p.id===_editId})
+    DB.patients[idx]=Object.assign({},DB.patients[idx],data)
+    dbSave(); toast('已更新 ✓'); closeModal('mo-pt'); renderDetail(_editId); renderList(); _editId=null
+  } else {
+    var np=Object.assign({id:uid(),pathReports:[],rPath:'',ihc:'',dc:'',imgs:[],chemo:[],labs:[],createdAt:today()},data)
+    DB.patients.push(np); dbSave(); toast('患者已添加 ✓'); closeModal('mo-pt')
+    el('tb-sub').textContent='共 '+DB.patients.length+' 位患者'
+    renderList(); selPt(np.id); updateBadge()
+  }
+}
+
+// ════ PATHOLOGY ════
+var _pathEditId=null
+function openPath(id){
+  _pathEditId=id
+  setV('path-full',''); setV('path-rp',''); setV('path-ihc',''); setV('path-lymph','')
+  el('path-status').style.display='none'
+  if(window._txtPathCache){
+    setV('path-full',window._txtPathCache.fullText); setV('path-rp',window._txtPathCache.rp); setV('path-ihc',window._txtPathCache.ihc); setV('path-lymph',window._txtPathCache.lymph)
+    el('path-status').style.display='block'; el('path-status').textContent='✅ 已从TXT导入内容，请核对后保存'
+    window._txtPathCache=null
+  }
+  openModal('mo-path')
+}
+
+function handlePathTXT(e){
+  var file=e.target.files[0]; if(!file) return
+  var rd=new FileReader()
+  rd.onload=function(ev){
+    var txt=ev.target.result,r=parseTXT(txt)
+    setV('path-full',txt); if(r.rp) setV('path-rp',r.rp); if(r.ihc) setV('path-ihc',r.ihc); if(r.lymph) setV('path-lymph',r.lymph)
+    var st=el('path-status'); st.style.display='block'; st.textContent='✅ 已导入 '+file.name+'，请核对'
+    toast('✅ 病理TXT导入完成')
+  }
+  rd.readAsText(file,'UTF-8'); e.target.value=''
+}
+
+function savePath(){
+  var full=getV('path-full'); if(!full){ toast('请输入或导入病理报告内容'); return }
+  var p=DB.patients.find(function(x){return x.id===_pathEditId}); if(!p) return
+  if(!p.pathReports) p.pathReports=[]
+  var rp=getV('path-rp'),ihc=getV('path-ihc'),lymph=getV('path-lymph')
+  p.pathReports.push({id:uid(),date:today(),fullText:full,summary:rp.substring(0,60)||full.substring(0,60),rp:rp,ihc:ihc,lymph:lymph})
+  p.rPath=rp; p.ihc=ihc; if(lymph) p.lymph=lymph; p.pathDone=true; p.updatedAt=new Date().toISOString()
+  dbSave(); closeModal('mo-path'); renderDetail(_detailId); toast('病理报告已保存 ✓'); _pathEditId=null
+}
+
+// ════ LAB ════
+function openLab(id){ _editId=id; el('lb-date').value=today(); openModal('mo-lab') }
+function saveLab(){
+  var keys=['wbc','neut','hgb','plt','rbc','hct','alt','ast','k','cr','na','glu','hr','qtc']
+  var lab={date:getV('lb-date')||today()}
+  keys.forEach(function(k){ var v=getV('lb-'+k); if(v) lab[k]=v })
+  lab.upro=getV('lb-upro'); lab.ecg=getV('lb-ecg')
+  var p=DB.patients.find(function(x){return x.id===_editId}); if(!p) return
+  if(!p.labs) p.labs=[]
+  p.labs.push(lab); p.updatedAt=new Date().toISOString(); dbSave()
+  var als=labAlerts(lab); closeModal('mo-lab'); _dtab=3; renderDetail(_detailId); _editId=null
+  if(als.length) toast('⚠️ 发现 '+als.length+' 项检验异常！',4000)
+  else toast('检验结果已保存 ✓')
+}
+function delLab(id,idx){ if(!confirm('删除此检验记录？'))return; var p=DB.patients.find(function(x){return x.id===id}); if(!p)return; p.labs.splice(idx,1); dbSave(); renderDetail(_detailId); toast('已删除') }
+
+// ════ CHEMO ════
+var SE_LIST=['骨髓抑制','恶心呕吐','脱发','疲乏','周围神经毒性','口腔黏膜炎','腹泻','便秘','心脏毒性','手足综合征','皮疹','肝功损害','肾功损害','过敏反应']
+function openChemo(id){
+  _editId=id; setV('cf-date',today()); setV('cf-scheme',''); setV('cf-drugs',''); setV('cf-note','')
+  el('se-form').innerHTML=SE_LIST.map(function(s){
+    return '<div class="se-row"><div class="se-name">'+s+'</div><div class="se-dots">'
+    +[0,1,2,3,4].map(function(g){ return '<div class="se-dot g'+g+(g===0?' on':'')+'" data-se="'+s+'" data-g="'+g+'" onclick="tglSE(this)">'+g+'</div>' }).join('')
+    +'</div></div>'
+  }).join('')
+  openModal('mo-chemo')
+}
+function tglSE(el){ var s=el.dataset.se; document.querySelectorAll('.se-dot[data-se="'+s+'"]').forEach(function(d){d.classList.remove('on')}); el.classList.add('on') }
+function saveChemo(){
+  var date=getV('cf-date'),scheme=getV('cf-scheme')
+  if(!date||!scheme){ toast('请填写日期和方案'); return }
+  var se={}
+  SE_LIST.forEach(function(s){ var a=document.querySelector('.se-dot[data-se="'+s+'"].on'); if(a&&parseInt(a.dataset.g)>0) se[s]=parseInt(a.dataset.g) })
+  var p=DB.patients.find(function(x){return x.id===_editId}); if(!p) return
+  if(!p.chemo) p.chemo=[]
+  p.chemo.push({id:uid(),date:date,scheme:scheme,drugs:getV('cf-drugs'),note:getV('cf-note'),sideEffects:se})
+  p.chemo.sort(function(a,b){return a.date.localeCompare(b.date)})
+  p.updatedAt=new Date().toISOString(); dbSave(); closeModal('mo-chemo'); renderDetail(_detailId); toast('化疗记录已保存 ✓'); _editId=null; updateBadge()
+}
+function delChemo(id,idx){ if(!confirm('删除此疗程？'))return; var p=DB.patients.find(function(x){return x.id===id}); if(!p)return; p.chemo.splice(idx,1); dbSave(); renderDetail(_detailId); toast('已删除') }
+
+// ════ DISCHARGE ════
+var _dcImgs=[]
+function openDc(id){ var p=DB.patients.find(function(x){return x.id===id}); _editId=id; _dcImgs=[]; setV('dc-text',p?p.dc:''); el('dc-previews').innerHTML=''; openModal('mo-dc') }
+function addDcImgs(e){ var files=[].slice.call(e.target.files); files.forEach(function(f){ var r=new FileReader(); r.onload=function(ev){ _dcImgs.push(ev.target.result); el('dc-previews').innerHTML+='<img src="'+ev.target.result+'" style="width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">' }; r.readAsDataURL(f) }); e.target.value='' }
+function saveDc(){ var p=DB.patients.find(function(x){return x.id===_editId}); if(!p)return; p.dc=getV('dc-text'); if(_dcImgs.length){if(!p.imgs)p.imgs=[];_dcImgs.forEach(function(d){p.imgs.push(d)})} p.updatedAt=new Date().toISOString(); dbSave(); closeModal('mo-dc'); renderDetail(_detailId); toast('已保存 ✓'); _editId=null; _dcImgs=[] }
+function addExamImgs(e){ var files=[].slice.call(e.target.files),p=DB.patients.find(function(x){return x.id===_detailId}); if(!p)return; if(!p.imgs)p.imgs=[]; files.forEach(function(f){var r=new FileReader();r.onload=function(ev){p.imgs.push(ev.target.result);dbSave();renderDetail(_detailId)};r.readAsDataURL(f)}); e.target.value='' }
+function viewImg(id,idx){ var p=DB.patients.find(function(x){return x.id===id}); if(!p)return; var w=window.open(); w.document.write('<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+p.imgs[idx]+'" style="max-width:100%;max-height:100vh;object-fit:contain"><\/body>') }
+function delPt(id){ if(!confirm('确认删除该患者全部信息？不可撤销。'))return; DB.patients=DB.patients.filter(function(p){return p.id!==id}); dbSave(); _detailId=null; el('ptd-content').innerHTML='<div class="empty" style="height:100vh"><div class="empty-ico">👈</div><div class="empty-title">从左侧选择患者</div></div>'; renderList(); toast('已删除'); updateBadge(); el('tb-sub').textContent='共 '+DB.patients.length+' 位患者' }
+
+// ════ REMINDERS VIEW ════
+function renderReminders(){
+  var all=getReminders(),now=today()
+  var ov=all.filter(function(r){return r.date<now}),up=all.filter(function(r){return r.date>=now})
+  var h='<div class="stats-grid" style="margin-bottom:14px">'
+  +'<div class="stat-card stat-red"><div class="stat-card-label">逾期</div><div class="stat-card-val">'+ov.length+'</div></div>'
+  +'<div class="stat-card stat-orange"><div class="stat-card-label">7天内</div><div class="stat-card-val">'+up.filter(function(r){return diffDays(r.date)<=7}).length+'</div></div>'
+  +'<div class="stat-card stat-blue"><div class="stat-card-label">30天内</div><div class="stat-card-val">'+up.filter(function(r){return diffDays(r.date)<=30}).length+'</div></div>'
+  +'<div class="stat-card stat-green"><div class="stat-card-label">全部</div><div class="stat-card-val">'+all.length+'</div></div></div>'
+  if(!all.length){ h+='<div class="card"><div class="empty"><div class="empty-ico">🎉</div><div class="empty-title">暂无提醒</div></div></div>' }
+  else {
+    if(ov.length) h+='<div class="card" style="margin-bottom:14px"><div class="card-head">⚠️ 已逾期 <span class="tag tag-alert">'+ov.length+'</span></div><div class="card-body" style="padding:0 0 2px">'+ov.map(function(r){return remRow(r,true)}).join('')+'</div></div>'
+    if(up.length) h+='<div class="card"><div class="card-head">📅 即将到来</div><div class="card-body" style="padding:0 0 2px">'+up.map(function(r){return remRow(r,false)}).join('')+'</div></div>'
+  }
+  el('remind-body').innerHTML=h
+}
+
+// ════ GUIDELINES ════
+var _guidePdf=null
+function renderGuides(){
+  var e=el('guide-list')
+  if(!DB.guidelines.length){ e.innerHTML='<div class="empty"><div class="empty-ico">📚</div><div class="empty-title">暂无指南</div></div>'; return }
+  e.innerHTML=DB.guidelines.map(function(g,i){
+    return '<div class="guide-item" onclick="openGuide('+i+')">'
+    +'<div class="guide-ico">📄</div>'
+    +'<div style="flex:1;min-width:0"><div class="guide-name">'+esc(g.name)+'</div><div class="guide-meta">'+esc(g.year||'')+'</div></div>'
+    +'<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();delGuide('+i+')">删除</button></div>'
+  }).join('')
+}
+function openGuide(i){ var g=DB.guidelines[i],v=el('guide-viewer'); if(g.dataUrl) v.innerHTML='<div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13.5px;font-weight:600;background:var(--white)">📄 '+esc(g.name)+'</div><iframe src="'+g.dataUrl+'" style="flex:1;border:none;width:100%"></iframe>'; else v.innerHTML='<div class="empty"><div class="empty-ico">📄</div><div class="empty-title">'+esc(g.name)+'</div></div>' }
+function openAddGuide(){ setV('gf-name',''); setV('gf-year',''); el('gf-file-name').textContent='点击选择PDF文件（最大50MB）'; _guidePdf=null; openModal('mo-guide') }
+function handleGuidePDF(e){ var f=e.target.files[0]; if(!f)return; if(f.size>52428800){toast('文件超过50MB');return} el('gf-file-name').textContent=f.name+' 加载中…'; var r=new FileReader(); r.onload=function(ev){_guidePdf=ev.target.result;el('gf-file-name').textContent='✓ '+f.name}; r.readAsDataURL(f) }
+function saveGuide(){ var name=getV('gf-name'); if(!name){toast('请填写指南名称');return} DB.guidelines.push({id:uid(),name:name,year:getV('gf-year'),dataUrl:_guidePdf,addedAt:today()}); dbSave(); closeModal('mo-guide'); renderGuides(); toast('指南已添加 ✓'); _guidePdf=null }
+function delGuide(i){ if(!confirm('确认删除此指南？'))return; DB.guidelines.splice(i,1); dbSave(); renderGuides(); el('guide-viewer').innerHTML='<div class="empty" style="height:100%"><div class="empty-ico">📚</div><div class="empty-title">选择指南查看</div></div>'; toast('已删除') }
+
+// ════ STATS ════
+function renderStats(){
+  var pts=DB.patients,now=new Date()
+  var inRange=function(p){ if(!p.surgDate)return false; var d=new Date(p.surgDate+'T00:00:00'); if(_spPeriod==='week'){var s=new Date(now);s.setDate(s.getDate()-s.getDay());s.setHours(0,0,0,0);return d>=s} if(_spPeriod==='month')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth(); return d.getFullYear()===now.getFullYear() }
+  var fp=pts.filter(inRange),c=fp.filter(function(p){return p.type==='cancer'}).length,b=fp.filter(function(p){return p.type==='benign'}).length
+  var months=[],maxV=1
+  for(var i=5;i>=0;i--){ var mo=new Date(now.getFullYear(),now.getMonth()-i,1); var mc=pts.filter(function(p){if(!p.surgDate)return false;var d=new Date(p.surgDate+'T00:00:00');return d.getFullYear()===mo.getFullYear()&&d.getMonth()===mo.getMonth()}); var cc=mc.filter(function(p){return p.type==='cancer'}).length,bb=mc.filter(function(p){return p.type==='benign'}).length; months.push({l:(mo.getMonth()+1)+'月',c:cc,b:bb}); maxV=Math.max(maxV,cc+bb) }
+  var cp=fp.length?Math.round(c/fp.length*100):0,bp=fp.length?Math.round(b/fp.length*100):0
+  var H=100
+  var h='<div style="display:flex;gap:8px;margin-bottom:14px;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:4px;width:280px">'
+  +['week','month','year'].map(function(per){ return '<div style="flex:1;padding:7px;text-align:center;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all .12s;'+(_spPeriod===per?'background:var(--green);color:#fff':'color:var(--text-3)')+'" onclick="_spPeriod=\''+per+'\';renderStats()">'
+  +{week:'本周',month:'本月',year:'本年'}[per]+'</div>' }).join('')+'</div>'
+  h+='<div class="stats-grid" style="margin-bottom:14px">'
+  +'<div class="stat-card stat-green"><div class="stat-card-label">患者总数</div><div class="stat-card-val">'+fp.length+'</div><div class="stat-card-sub">手术 '+fp.length+' 台</div></div>'
+  +'<div class="stat-card stat-red"><div class="stat-card-label">乳腺癌</div><div class="stat-card-val">'+c+'</div><div class="stat-card-sub">手术 '+c+' 台</div></div>'
+  +'<div class="stat-card stat-green"><div class="stat-card-label">良性肿瘤</div><div class="stat-card-val">'+b+'</div><div class="stat-card-sub">手术 '+b+' 台</div></div>'
+  +'<div class="stat-card stat-orange"><div class="stat-card-label">待上传病理</div><div class="stat-card-val">'+fp.filter(function(p){return!(p.pathReports||[]).length}).length+'</div></div></div>'
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+  h+='<div class="card"><div class="card-head">近6个月手术量</div><div class="card-body" style="padding:16px">'
+  h+='<div class="bar-wrap">'+months.map(function(m){var ch=Math.round(m.c/maxV*H),bh=Math.round(m.b/maxV*H);return'<div class="bar-col"><div class="bar-stk" style="height:'+H+'px"><div class="bar-c" style="height:'+ch+'px"></div><div class="bar-b" style="height:'+bh+'px"></div></div><div class="bar-lbl">'+m.l+'</div></div>'}).join('')+'</div>'
+  h+='<div style="display:flex;gap:16px;margin-top:10px;justify-content:center">'
+  +'<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-2)"><div style="width:10px;height:10px;background:rgba(201,48,37,.65);border-radius:2px"></div>乳腺癌</div>'
+  +'<div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text-2)"><div style="width:10px;height:10px;background:var(--green);opacity:.7;border-radius:2px"></div>良性</div>'
+  +'</div></div></div>'
+  h+='<div class="card"><div class="card-head">类型分布</div><div class="card-body" style="padding:16px">'
+  h+='<div class="dist-bar"><div class="dist-c" style="flex:'+c+'"></div><div class="dist-b" style="flex:'+b+'"></div>'+(!fp.length?'<div style="flex:1;background:#f3f4f6"></div>':'')+'</div>'
+  h+='<div style="display:flex;gap:20px"><div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:rgba(201,48,37,.65)"></div><div><div style="font-size:13.5px;font-weight:600">乳腺癌</div><div style="font-size:12px;color:var(--text-3)">'+c+'例 · '+cp+'%</div></div></div>'
+  +'<div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:var(--green);opacity:.75"></div><div><div style="font-size:13.5px;font-weight:600">良性</div><div style="font-size:12px;color:var(--text-3)">'+b+'例 · '+bp+'%</div></div></div></div></div></div>'
+  h+='</div>'
+  h+='<div class="card" style="margin-top:14px"><div class="card-head">全部汇总</div><div class="card-body" style="padding:16px"><div class="stats-grid">'
+  +'<div class="stat-card stat-green"><div class="stat-card-label">累计患者</div><div class="stat-card-val">'+pts.length+'</div></div>'
+  +'<div class="stat-card stat-red"><div class="stat-card-label">乳腺癌合计</div><div class="stat-card-val">'+pts.filter(function(p){return p.type==='cancer'}).length+'</div></div>'
+  +'<div class="stat-card stat-green"><div class="stat-card-label">良性合计</div><div class="stat-card-val">'+pts.filter(function(p){return p.type==='benign'}).length+'</div></div>'
+  +'<div class="stat-card stat-orange"><div class="stat-card-label">化疗疗程</div><div class="stat-card-val">'+pts.reduce(function(s,p){return s+(p.chemo||[]).length},0)+'</div></div>'
+  +'</div></div></div>'
+  el('stats-body').innerHTML=h
+}
+
+// ════ IMPORT / EXPORT ════
+function exportData(){ var blob=new Blob([JSON.stringify(Object.assign({},DB,{exportedAt:new Date().toISOString()}),null,2)],{type:'application/json'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='乳腺外科数据_'+today()+'.json'; a.click(); setTimeout(function(){URL.revokeObjectURL(a.href)},1000); toast('✅ 数据已导出') }
+var _importMode='merge'
+function startImport(m){ _importMode=m; el('fi-import').click() }
+function doImport(e){
+  var file=e.target.files[0]; if(!file) return
+  var rd=new FileReader()
+  rd.onload=function(ev){
+    try{
+      var r=JSON.parse(ev.target.result); if(!r.patients) throw new Error('格式不正确')
+      if(_importMode==='over'){
+        if(!confirm('将完全替换本地数据（'+r.patients.length+'位患者），确认？')){e.target.value='';return}
+        DB={patients:r.patients,guidelines:r.guidelines||DB.guidelines||[]}; dbSave(); nav('dashboard'); toast('✅ 已覆盖导入 '+DB.patients.length+' 位患者')
+      } else {
+        var lm={}; DB.patients.forEach(function(p){lm[p.id]=p})
+        var added=0,updated=0,kept=0
+        r.patients.forEach(function(rp){ var lp=lm[rp.id]; if(!lp){lm[rp.id]=rp;added++}else{var rt=new Date(rp.updatedAt||rp.createdAt||0).getTime(),lt=new Date(lp.updatedAt||lp.createdAt||0).getTime();if(rt>lt){lm[rp.id]=rp;updated++}else kept++} })
+        if(!confirm('合并：新增'+added+'位 更新'+updated+'位 保留'+kept+'位\n共'+Object.keys(lm).length+'位，确认？')){e.target.value='';return}
+        DB.patients=Object.values(lm).sort(function(a,b){return(b.surgDate||'').localeCompare(a.surgDate||'')})
+        if(r.guidelines&&r.guidelines.length){var gm={};(DB.guidelines||[]).forEach(function(g){gm[g.id]=g});r.guidelines.forEach(function(g){if(!gm[g.id])gm[g.id]=g});DB.guidelines=Object.values(gm)}
+        dbSave(); nav('dashboard'); toast('✅ 合并完成：新增'+added+'，更新'+updated+'，共'+DB.patients.length+'位')
+      }
+    }catch(err){toast('❌ 导入失败：'+err.message)}
+    e.target.value=''
+  }; rd.readAsText(file)
+}
+
+// ════ GIST SYNC ════
+var SYNC={token:localStorage.getItem('bc_token')||'',gistId:localStorage.getItem('bc_gist')||null,filename:'breast_data.json',busy:false}
+function onToken(v){ SYNC.token=v.trim(); localStorage.setItem('bc_token',SYNC.token); updateSyncSt() }
+function updateSyncSt(){
+  var e=el('sync-st'),inp=el('token-inp'); if(!e)return
+  if(inp&&!inp.value&&SYNC.token) inp.value=SYNC.token
+  var last=localStorage.getItem('bc_last_sync')
+  e.textContent=SYNC.token?(last?'✅ 上次同步 '+last:'✅ Token已设置'):'未设置Token'
+  e.style.color=SYNC.token?'var(--green)':'var(--text-3)'
+}
+function syncUp(silent){
+  if(SYNC.busy||!SYNC.token||!navigator.onLine)return; SYNC.busy=true; el('sync-st').textContent='🔄 同步中…'
+  var dc=JSON.parse(JSON.stringify(DB)); dc.guidelines=(dc.guidelines||[]).map(function(g){return Object.assign({},g,{dataUrl:g.dataUrl?'[PDF]':null})})
+  var body={description:'乳腺外科数据',public:false,files:{}}; body.files[SYNC.filename]={content:JSON.stringify(dc)}
+  fetch(SYNC.gistId?'https://api.github.com/gists/'+SYNC.gistId:'https://api.github.com/gists',{method:SYNC.gistId?'PATCH':'POST',headers:{Authorization:'token '+SYNC.token,'Content-Type':'application/json'},body:JSON.stringify(body)})
+  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+  .then(function(d){ SYNC.gistId=d.id; localStorage.setItem('bc_gist',d.id); SYNC.busy=false; var t=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}); localStorage.setItem('bc_last_sync',t); updateSyncSt(); if(!silent) toast('☁️ 已同步到云端 ✓') })
+  .catch(function(e){ SYNC.busy=false; el('sync-st').textContent='❌ 同步失败'; if(!silent) toast('❌ 同步失败：'+e.message) })
+}
+function syncDown(){
+  if(!SYNC.gistId||!SYNC.token){toast('请先设置GitHub Token');return}
+  if(!navigator.onLine){toast('当前离线');return}
+  el('sync-st').textContent='🔄 拉取中…'
+  fetch('https://api.github.com/gists/'+SYNC.gistId,{headers:{Authorization:'token '+SYNC.token}})
+  .then(function(r){return r.json()})
+  .then(function(d){ var c=d.files&&d.files[SYNC.filename]&&d.files[SYNC.filename].content; if(!c) throw new Error('云端无数据'); var r=JSON.parse(c); if(!r.patients) throw new Error('格式错误')
+    var lp=(DB.guidelines||[]).filter(function(g){return g.dataUrl&&g.dataUrl!=='[PDF]'}); DB=r
+    DB.guidelines=(DB.guidelines||[]).map(function(g){if(g.dataUrl==='[PDF]'){var l=lp.find(function(x){return x.id===g.id});return l?Object.assign({},g,{dataUrl:l.dataUrl}):g}return g})
+    migrate(); var t=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}); localStorage.setItem('bc_last_sync',t); updateSyncSt(); nav('dashboard'); toast('☁️ 已拉取（'+DB.patients.length+'位患者）✓') })
+  .catch(function(e){ el('sync-st').textContent='❌ 拉取失败'; toast('❌ 拉取失败：'+e.message) })
+}
+
+// ════ DEMO DATA ════
+function initDemo(){
+  if(DB.patients.length) return
+  var t=today()
+  DB.patients=[
+    {id:uid(),name:'李秀兰',admNo:'H2024231',outNo:'C2024089',surgDate:addDays(t,-8),method:'乳腺癌改良根治术',lymph:'SNB 0/2',type:'cancer',er:'pos',pr:'pos',her2:'neg',ki67:'12',tT:'T2',tN:'N1',tM:'M0',size:'2.8',grade:'2',pathDone:false,pathReports:[],rPath:'',ihc:'',dc:'',imgs:[],chemo:[],labs:[],createdAt:t,note:''},
+    {id:uid(),name:'张媛媛',admNo:'424648',outNo:'0013786700',surgDate:'2026-03-10',method:'乳腺癌保乳术+前哨淋巴结活检',lymph:'SNB 0/2',type:'cancer',er:'pos',pr:'pos',her2:'neg',ki67:'5',tT:'T2',tN:'N0',tM:'M0',size:'2.4',grade:'2',pathDone:true,pathReports:[{id:uid(),date:'2026-03-10',fullText:'张媛媛;43岁;424648;0013786700;2026-03-10右侧保乳+前哨\n送检标本:乳癌保乳切除标本\n肿瘤性质:浸润性癌伴原位癌成分\n组织学类型:浸润性导管癌，非特殊类型\n组织学分级:II级(中分化),Nottingham评分总分6分\npTNM分期(AJCC-8th):pT:T2 pN:N0(sn)\n(右乳头后方肿块)肿细胞ER(90%3+),PR(90%3+),Her-2(1+),Ki67(5%+)',summary:'浸润性导管癌 G2 切缘阴性',rp:'浸润性导管癌，G2，切缘阴性',ihc:'ER(90%3+), PR(90%3+), Her-2(1+), Ki67(5%+)',lymph:'SNB 0/2'}],rPath:'浸润性导管癌',ihc:'ER(90%3+) PR(90%3+) HER2(1+)',dc:'',imgs:[],chemo:[],labs:[],createdAt:addDays(t,-5),note:'浸润性导管癌，非特殊类型；右侧侧；脉管侵犯：未见 神经侵犯：未见'},
+    {id:uid(),name:'王芳',admNo:'H2024198',outNo:'',surgDate:addDays(t,-45),method:'乳腺区段切除术',lymph:'N/A',type:'benign',er:'',pr:'',her2:'',ki67:'',tT:'',tN:'',tM:'',size:'1.5',grade:'',pathDone:true,pathReports:[{id:uid(),date:addDays(t,-44),fullText:'纤维腺瘤，切缘净',summary:'纤维腺瘤',rp:'纤维腺瘤，切缘净',ihc:'ER(-) PR(-) HER2(-)',lymph:''}],rPath:'纤维腺瘤',ihc:'ER(-)',dc:'恢复良好',imgs:[],chemo:[],labs:[],createdAt:addDays(t,-45),note:''},
+    {id:uid(),name:'陈美华',admNo:'H2024155',outNo:'C2024061',surgDate:addDays(t,-92),method:'乳腺癌保乳术+腋窝淋巴结清扫',lymph:'ALND 3/12',type:'cancer',er:'pos',pr:'neg',her2:'pos',ki67:'30',tT:'T2',tN:'N2',tM:'M0',size:'3.2',grade:'3',pathDone:true,pathReports:[{id:uid(),date:addDays(t,-91),fullText:'浸润性导管癌，Nottingham分级III级，切缘净，腋窝淋巴结3/12转移\n\nER(+90%) PR(-) HER2(3+) Ki67 30%',summary:'浸润性导管癌 G3 ALND 3/12',rp:'浸润性导管癌，G3，切缘净，ALND 3/12',ihc:'ER(+90%) PR(-) HER2(3+) Ki67 30%',lymph:'ALND 3/12'}],rPath:'浸润性导管癌',ihc:'ER(+90%) HER2(3+)',dc:'术后恢复顺利，已完成AC×4疗程',imgs:[],chemo:[{id:uid(),date:addDays(t,-60),scheme:'AC',drugs:'多柔比星 60mg/m²\n环磷酰胺 600mg/m²',note:'',sideEffects:{骨髓抑制:2,恶心呕吐:1,脱发:2}},{id:uid(),date:addDays(t,-18),scheme:'T+H',drugs:'紫杉醇 175mg/m²\n曲妥珠单抗 6mg/kg',note:'',sideEffects:{周围神经毒性:1,疲乏:1}}],labs:[{date:addDays(t,-20),wbc:'2.1',neut:'0.8',hgb:'95',plt:'88',alt:'65',ast:'52',k:'3.2',qtc:'455',ecg:'窦性心律，QTc延长',upro:''}],createdAt:addDays(t,-92),note:'BRCA1/2阴性'}
+  ]
+  try{localStorage.setItem('bc_v4',JSON.stringify(DB))}catch(e){}
+}
+
+// ════ INIT ════
+initDemo()
+migrate()
+renderDash()
+updateBadge()
+updateSyncSt()
+if(SYNC.token&&SYNC.gistId&&navigator.onLine) setTimeout(function(){syncUp(true)},2000)
+</script>
+</body>
+</html>
