@@ -2,27 +2,14 @@
   "name": "乳腺外科患者管理",
   "short_name": "乳腺外科",
   "description": "乳腺外科患者信息与随访管理工具",
-  "start_url": "/mobile.html",
+  "start_url": "/index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f5c52",
   "theme_color": "#0f5c52",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-192.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "apple touch icon"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-192.png", "sizes": "180x180", "type": "image/png", "purpose": "apple touch icon" }
   ]
 }
