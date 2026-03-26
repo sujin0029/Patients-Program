@@ -281,6 +281,24 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);color:var(--txt);b
 ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:#9ca3af}
 
+
+/* ═══ OCR OVERLAY ═══ */
+.ocr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.ocr-box{background:#fff;border-radius:16px;width:520px;max-width:92vw;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.ocr-spinner{width:40px;height:40px;border:3px solid rgba(26,92,82,.2);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ocr-progress{font-size:14px;text-align:center;color:var(--txt2);margin-bottom:8px}
+.ocr-sub{font-size:12px;text-align:center;color:var(--txt3)}
+.ocr-result-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:.5px solid var(--bdr);font-size:13px}
+.ocr-result-row:last-child{border:none}
+.ocr-result-key{width:100px;color:var(--txt3);flex-shrink:0;font-weight:500}
+.ocr-result-val{flex:1;color:var(--txt2)}
+.ocr-result-val.changed{color:var(--p);font-weight:600}
+.api-key-bar{background:rgba(255,255,255,.08);border-radius:8px;padding:8px 12px;margin:2px 8px 6px;display:flex;align-items:center;gap:8px}
+.api-key-bar input{flex:1;background:transparent;border:none;outline:none;font-size:12px;color:rgba(255,255,255,.7);font-family:var(--font)}
+.api-key-bar input::placeholder{color:rgba(255,255,255,.3)}
+.api-key-status{font-size:11px;color:rgba(255,255,255,.45);padding:0 12px 6px}
+
 /* ═══ BAR CHART ═══ */
 .bar-wrap{display:flex;align-items:flex-end;gap:8px;height:120px}
 .bar-col-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -310,12 +328,30 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);color:var(--txt);b
     <div class="sb-item" onclick="navTo('guidelines')"><span class="sb-item-ico">📚</span>指南文献</div>
     <div class="sb-item" onclick="navTo('stats')"><span class="sb-item-ico">📈</span>统计分析</div>
     <div class="sb-bottom">
-      <div id="sync-status" style="padding:8px 12px;font-size:12px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:6px;margin-bottom:4px">☁️ 检查同步状态…</div>
-      <div class="sb-sync" onclick="syncToCloud()" title="立即上传数据到云端">☁️ 立即同步到云端</div>
-      <div class="sb-sync" onclick="syncFromCloud()" title="从云端拉取最新数据">⬇️ 从云端拉取数据</div>
-      <div class="sb-sync" onclick="exportData()">💾 导出本地备份</div>
-      <div class="sb-sync" onclick="importData()">📂 导入本地备份</div>
+      <div style="padding:8px 14px 4px;font-size:11px;color:rgba(255,255,255,.35);font-weight:600;letter-spacing:.6px;text-transform:uppercase">AI识别设置</div>
+      <div style="padding:2px 10px 4px">
+        <select id="ai-provider-sel" onchange="switchProvider(this.value)" style="width:100%;background:rgba(255,255,255,.1);border:none;border-radius:6px;padding:7px 10px;color:rgba(255,255,255,.8);font-size:12px;font-family:var(--font);outline:none;cursor:pointer">
+          <option value="anthropic">Anthropic Claude（需VPN）</option>
+          <option value="openai">OpenAI GPT-4o（需VPN）</option>
+          <option value="qwen">通义千问VL（国内直连）</option>
+          <option value="deepseek">DeepSeek（国内直连）</option>
+        </select>
+      </div>
+      <div class="api-key-bar">
+        <span style="font-size:14px">🔑</span>
+        <input type="password" id="api-key-input" placeholder="输入 API Key…" oninput="saveApiKey(this.value)">
+      </div>
+      <div class="api-key-status" id="api-key-status">未设置 — 图片识别功能不可用</div>
+      <div style="padding:2px 14px 6px;font-size:11px;color:rgba(255,255,255,.25);line-height:1.5" id="api-key-hint"></div>
+      <div style="padding:8px 14px 4px;font-size:11px;color:rgba(255,255,255,.35);font-weight:600;letter-spacing:.6px;text-transform:uppercase">本地文件同步</div>
+      <div class="sb-sync" onclick="exportData()" title="导出JSON文件传给其他设备">📤 导出数据文件</div>
+      <div class="sb-sync" onclick="startImport('merge')" title="与本地数据合并，保留最新">📥 导入并合并</div>
+      <div class="sb-sync" onclick="startImport('overwrite')" title="完全替换本地数据">🔄 导入并覆盖</div>
       <input type="file" id="inp-import" accept=".json" style="display:none" onchange="doImport(event)">
+      <div style="padding:10px 14px 4px;font-size:11px;color:rgba(255,255,255,.35);font-weight:600;letter-spacing:.6px;text-transform:uppercase">云端同步</div>
+      <div id="sync-status" style="padding:3px 12px 6px;font-size:12px;color:rgba(255,255,255,.45)">☁️ 检查中…</div>
+      <div class="sb-sync" onclick="syncToCloud()">☁️ 同步到云端</div>
+      <div class="sb-sync" onclick="syncFromCloud()">⬇️ 从云端拉取</div>
     </div>
   </div>
 
@@ -394,6 +430,23 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);color:var(--txt);b
   <div class="modal modal-wide">
     <div class="modal-hd"><div class="modal-title" id="mo-pt-title">新增患者</div><span class="modal-close" onclick="closeModal('mo-patient')">✕</span></div>
     <div class="modal-bd">
+      <div class="fg" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label class="fl" style="margin:0">📷 上传病理报告 / 记事本截图 → AI自动识别填写</label>
+          <span id="ocr-api-warn" style="font-size:12px;color:var(--org);display:none">⚠️ 需先设置API Key</span>
+        </div>
+        <label class="ocr-drop" id="ocr-patient-drop" onclick="triggerPatientOCR(event)">
+          <input type="file" id="ocr-patient-inp" accept="image/*" style="display:none" onchange="handlePatientOCR(event)">
+          <div class="ocr-drop-ico">🤖</div>
+          <div class="ocr-drop-txt">点击上传病理报告图片（AI自动识别所有字段）</div>
+          <div class="ocr-drop-sub">支持记事本截图、打印报告拍照、屏幕截图</div>
+        </label>
+        <div id="ocr-patient-result" style="display:none;margin-top:10px;background:#f0faf8;border-radius:10px;padding:14px 16px;border:1px solid var(--plm)">
+          <div style="font-size:13px;font-weight:700;color:var(--p);margin-bottom:10px">✅ AI识别结果（绿色字段已自动填入，可手动修改）</div>
+          <div id="ocr-patient-fields"></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--bdr);margin:0 0 16px">
       <div class="fg-row3">
         <div class="fg"><label class="fl req">患者姓名</label><input class="fi" id="mf-name" placeholder="张三"></div>
         <div class="fg"><label class="fl req">住院号</label><input class="fi" id="mf-adm" placeholder="H2024001"></div>
@@ -453,12 +506,12 @@ html,body{height:100%;overflow:hidden;font-family:var(--font);color:var(--txt);b
       <div class="fg"><label class="fl req">常规病理</label><textarea class="ft" id="pf-rp" placeholder="输入常规病理描述…" rows="4"></textarea></div>
       <div class="fg"><label class="fl req">免疫组化</label><textarea class="ft" id="pf-ihc" placeholder="输入免疫组化结果…" rows="3"></textarea></div>
       <div class="fg">
-        <label class="fl">拍照上传病理报告</label>
-        <label class="ocr-drop">
-          <input type="file" accept="image/*" onchange="handlePathImg(event)">
-          <div class="ocr-drop-ico">📷</div>
-          <div class="ocr-drop-txt">点击拍照 / 上传病理报告图片</div>
-          <div class="ocr-drop-sub" id="path-img-name">图片将显示供参考，请手动核对填写上方字段</div>
+        <label class="fl">📷 上传病理报告 → AI识别自动填入</label>
+        <label class="ocr-drop" onclick="triggerPathOCR(event)">
+          <input type="file" id="path-ocr-inp" accept="image/*" style="display:none" onchange="handlePathOCR(event)">
+          <div class="ocr-drop-ico">🤖</div>
+          <div class="ocr-drop-txt">点击上传病理报告图片（AI自动提取常规病理+免疫组化）</div>
+          <div class="ocr-drop-sub" id="path-img-name">支持拍照、截图、扫描件</div>
         </label>
         <div id="path-img-preview"></div>
       </div>
@@ -1161,11 +1214,12 @@ function submitPatient() {
   }
   if (_editId) {
     const idx = DB.patients.findIndex(p => p.id === _editId)
+    data.updatedAt = new Date().toISOString()
     DB.patients[idx] = { ...DB.patients[idx], ...data }
     save(); toast('患者信息已更新 ✓'); closeModal('mo-patient')
     renderDetail(_editId); renderPatientList(); _editId = null
   } else {
-    const p = { id:uid(), ...data, pathDone:false, rPath:'', ihc:'', dc:'', imgs:[], chemo:[], labs:[], createdAt:today() }
+    const p = { id:uid(), ...data, pathDone:false, rPath:'', ihc:'', dc:'', imgs:[], chemo:[], labs:[], createdAt:today(), updatedAt:new Date().toISOString() }
     DB.patients.push(p); save(); toast('患者已添加 ✓'); closeModal('mo-patient')
     renderPatientList(); selectPatient(p.id)
     document.getElementById('tb-sub').textContent = `共 ${DB.patients.length} 位患者`
@@ -1180,22 +1234,365 @@ function openPathModal(id) {
   _editId = id; openModal('mo-path')
 }
 
-function handlePathImg(e) {
-  const file = e.target.files[0]; if (!file) return
-  const reader = new FileReader()
-  reader.onload = ev => {
-    document.getElementById('path-img-preview').innerHTML = `<img src="${ev.target.result}" style="width:100%;border-radius:8px;margin-top:8px;max-height:200px;object-fit:contain;background:#f5f5f5"><div style="font-size:12px;color:var(--txt3);margin-top:6px">📌 请对照图片手动填写上方字段，或使用系统文字识别功能</div>`
-    document.getElementById('path-img-name').textContent = file.name
+// ══════════════════════════════════════════════
+//  MULTI-PROVIDER AI ENGINE
+// ══════════════════════════════════════════════
+const AI_PROVIDERS = {
+  anthropic: {
+    name: 'Anthropic Claude',
+    hint: '申请地址：console.anthropic.com（需VPN）',
+    keyPrefix: 'sk-ant-',
+    call: async (b64, mt, prompt, key) => {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000,
+          messages: [{ role: 'user', content: [
+            { type: 'image', source: { type: 'base64', media_type: mt, data: b64 } },
+            { type: 'text', text: prompt }
+          ]}]
+        })
+      })
+      if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${r.status}`) }
+      const d = await r.json()
+      return d.content?.find(c => c.type === 'text')?.text || ''
+    }
+  },
+  openai: {
+    name: 'OpenAI GPT-4o',
+    hint: '申请地址：platform.openai.com（需VPN）',
+    keyPrefix: 'sk-',
+    call: async (b64, mt, prompt, key) => {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify({ model: 'gpt-4o', max_tokens: 2000,
+          messages: [{ role: 'user', content: [
+            { type: 'image_url', image_url: { url: `data:${mt};base64,${b64}` } },
+            { type: 'text', text: prompt }
+          ]}]
+        })
+      })
+      if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${r.status}`) }
+      const d = await r.json()
+      return d.choices?.[0]?.message?.content || ''
+    }
+  },
+  qwen: {
+    name: '通义千问VL',
+    hint: '申请地址：dashscope.aliyuncs.com（国内直连，免费额度）',
+    keyPrefix: 'sk-',
+    call: async (b64, mt, prompt, key) => {
+      const r = await fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify({ model: 'qwen-vl-max', max_tokens: 2000,
+          messages: [{ role: 'user', content: [
+            { type: 'image_url', image_url: { url: `data:${mt};base64,${b64}` } },
+            { type: 'text', text: prompt }
+          ]}]
+        })
+      })
+      if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${r.status}`) }
+      const d = await r.json()
+      return d.choices?.[0]?.message?.content || ''
+    }
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    hint: '申请地址：platform.deepseek.com（国内直连，极便宜）\n注意：DeepSeek图片识别能力有限',
+    keyPrefix: 'sk-',
+    call: async (b64, mt, prompt, key) => {
+      // DeepSeek V3 doesn't support vision well, use text-only with note
+      throw new Error('DeepSeek暂不支持图片识别，请选择其他平台')
+    }
   }
-  reader.readAsDataURL(file)
 }
+
+let _aiProvider = localStorage.getItem('bcs_ai_provider') || 'anthropic'
+let _apiKeys = JSON.parse(localStorage.getItem('bcs_api_keys') || '{}')
+
+function switchProvider(p) {
+  _aiProvider = p
+  localStorage.setItem('bcs_ai_provider', p)
+  const inp = document.getElementById('api-key-input')
+  if (inp) inp.value = _apiKeys[p] || ''
+  updateApiKeyStatus()
+}
+
+function saveApiKey(v) {
+  _apiKeys[_aiProvider] = v.trim()
+  localStorage.setItem('bcs_api_keys', JSON.stringify(_apiKeys))
+  updateApiKeyStatus()
+}
+
+function updateApiKeyStatus() {
+  const el = document.getElementById('api-key-status')
+  const hint = document.getElementById('api-key-hint')
+  const inp = document.getElementById('api-key-input')
+  const sel = document.getElementById('ai-provider-sel')
+  if (!el) return
+  if (sel) sel.value = _aiProvider
+  if (inp) inp.value = _apiKeys[_aiProvider] || ''
+  const prov = AI_PROVIDERS[_aiProvider]
+  if (hint && prov) hint.textContent = prov.hint
+  if (_apiKeys[_aiProvider]) {
+    el.textContent = `✅ ${prov?.name} Key已设置`
+    el.style.color = 'rgba(100,220,180,.8)'
+  } else {
+    el.textContent = '未设置Key — 图片识别不可用'
+    el.style.color = 'rgba(255,255,255,.3)'
+  }
+}
+
+async function callAI(b64, mt, prompt) {
+  const key = _apiKeys[_aiProvider]
+  if (!key) throw new Error(`请先设置 ${AI_PROVIDERS[_aiProvider]?.name} 的 API Key`)
+  const prov = AI_PROVIDERS[_aiProvider]
+  if (!prov) throw new Error('未知的AI提供商')
+  return await prov.call(b64, mt, prompt, key)
+}
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader()
+    r.onload = e => res(e.target.result.split(',')[1])
+    r.onerror = () => rej(new Error('文件读取失败'))
+    r.readAsDataURL(file)
+  })
+}
+
+function showOCRLoading(msg) {
+  let el = document.getElementById('ocr-overlay')
+  if (!el) {
+    el = document.createElement('div')
+    el.id = 'ocr-overlay'
+    el.className = 'ocr-overlay'
+    document.body.appendChild(el)
+  }
+  el.style.display = 'flex'
+  el.innerHTML = `<div class="ocr-box">
+    <div class="ocr-spinner"></div>
+    <div class="ocr-progress">${msg}</div>
+    <div class="ocr-sub">AI正在分析图片内容，请稍候…</div>
+  </div>`
+}
+
+function hideOCRLoading() {
+  const el = document.getElementById('ocr-overlay')
+  if (el) el.style.display = 'none'
+}
+
+async function callClaudeOCR(base64, mediaType, prompt) {
+  if (!_apiKeys[_aiProvider]) { toast('❌ 请先设置 API Key'); return null }
+  return await callAI(base64, mediaType || 'image/jpeg', prompt)
+}
+
+// ── Patient OCR (from pathology report image) ──
+function triggerPatientOCR(e) {
+  e.preventDefault()
+  if (!_apiKeys[_aiProvider]) {
+    document.getElementById('ocr-api-warn').style.display = 'inline'
+    toast('❌ 请先在左侧边栏设置 API Key'); return
+  }
+  document.getElementById('ocr-patient-inp').click()
+}
+
+async function handlePatientOCR(e) {
+  const file = e.target.files[0]; if (!file) return
+  e.target.value = ''
+  showOCRLoading('正在识别病理报告…')
+  try {
+    const b64 = await fileToBase64(file)
+    const mt = file.type || 'image/jpeg'
+    const prompt = `你是一位乳腺外科病理报告识别专家。请从这张图片中提取患者信息，只返回JSON，不要任何解释或markdown代码块。
+
+手术方式识别规则：
+- "保乳+前哨" 或 "保乳+前哨淋巴结活检" → "乳腺癌保乳术+前哨淋巴结活检"
+- "改良" 或 "改良根治" → "乳腺癌改良根治术"  
+- "肿切" 或 "肿块切除" → "乳腺肿块切除术"
+- 直接读取完整手术名称
+
+请提取以下字段并返回JSON：
+{
+  "name": "患者姓名",
+  "admNo": "住院号（纯数字或字母数字）",
+  "age": "年龄数字",
+  "surgDate": "手术日期YYYY-MM-DD格式，从报告日期推断",
+  "method": "手术方式（按上述规则翻译）",
+  "side": "左侧或右侧",
+  "tumorSize": "肿瘤最大径cm，纯数字",
+  "histType": "组织学类型，如：浸润性导管癌",
+  "grade": "组织学分级，只填1/2/3，对应I/II/III级",
+  "er": "ER状态：pos=阳性，neg=阴性，空字符串=未知",
+  "pr": "PR状态：pos=阳性，neg=阴性，空字符串=未知",
+  "her2": "HER2状态：pos=3+阳性，neg=阴性0/1+，eq=2+不确定，空字符串=未知",
+  "ki67": "Ki67百分比纯数字，如5",
+  "tT": "T分期，如T2（只填T后面的部分加T，如T2/T1c/T4b）",
+  "tN": "N分期，如N0（只填N+数字，N1mi也写N1）",
+  "tM": "M分期，如M0",
+  "fastPath": "快速病理/术中冰冻结果，如有",
+  "rPath": "完整的常规病理描述（多行保留原文）",
+  "ihc": "完整的免疫组化结果（原文，如ER(90% 3+), PR(60%+)等）",
+  "note": "其他重要备注，如DCIS成分、脉管侵犯、神经侵犯等"
+}
+
+若某字段图片中无法确认，填空字符串""。不要猜测，只填写图片中明确出现的信息。`
+
+    const raw = await callClaudeOCR(b64, mt, prompt)
+    hideOCRLoading()
+    
+    // Parse JSON
+    let result
+    try {
+      const clean = raw.replace(/```json?\n?|```/g, '').trim()
+      result = JSON.parse(clean)
+    } catch(pe) {
+      toast('❌ AI返回格式异常，请手动填写'); return
+    }
+
+    // Fill form fields and show results
+    const fieldMap = {
+      name: ['mf-name', '姓名'],
+      admNo: ['mf-adm', '住院号'],
+      surgDate: ['mf-date', '手术日期'],
+      method: ['mf-method', '手术方式'],
+      tumorSize: ['mf-size', '肿瘤大小'],
+      ki67: ['mf-ki67', 'Ki67'],
+    }
+    const selectMap = {
+      er: ['mf-er', 'ER', {pos:'pos',neg:'neg','':''}],
+      pr: ['mf-pr', 'PR', {pos:'pos',neg:'neg','':''}],
+      her2: ['mf-her2', 'HER2', {pos:'pos',neg:'neg',eq:'eq','':''}],
+      grade: ['mf-grade', '分级', {'1':'1','2':'2','3':'3','':''}],
+      tT: ['mf-tT', 'T分期', null],
+      tN: ['mf-tN', 'N分期', null],
+      tM: ['mf-tM', 'M分期', null],
+    }
+
+    const rows = []
+    
+    Object.entries(fieldMap).forEach(([key, [id, label]]) => {
+      if (result[key]) {
+        const el = document.getElementById(id)
+        if (el) { el.value = result[key]; rows.push({label, val: result[key], filled: true}) }
+      }
+    })
+    
+    Object.entries(selectMap).forEach(([key, [id, label, map]]) => {
+      if (result[key] !== undefined && result[key] !== '') {
+        const el = document.getElementById(id)
+        if (el) {
+          el.value = result[key]
+          const disp = {pos:'阳性',neg:'阴性',eq:'2+不确定'}[result[key]] || result[key]
+          rows.push({label, val: disp, filled: true})
+        }
+      }
+    })
+    
+    // Set type to cancer automatically for pathology reports
+    mSelType('cancer')
+    
+    // Fill note with extra info
+    const noteExtra = [
+      result.histType ? '组织学：' + result.histType : '',
+      result.side ? '侧别：' + result.side : '',
+      result.note || '',
+    ].filter(Boolean).join('；')
+    if (noteExtra) {
+      const noteEl = document.getElementById('mf-note')
+      if (noteEl && !noteEl.value) noteEl.value = noteExtra
+      rows.push({label: '备注', val: noteExtra, filled: true})
+    }
+    
+    // Fill pathology fields if available
+    if (result.rPath || result.ihc) {
+      // Store temporarily for pathology modal
+      window._ocrPathData = { rPath: result.rPath, ihc: result.ihc }
+      rows.push({label: '常规病理', val: result.rPath ? '已识别（可在病理Tab上传）' : '', filled: !!result.rPath})
+      rows.push({label: '免疫组化', val: result.ihc ? '已识别（可在病理Tab上传）' : '', filled: !!result.ihc})
+    }
+
+    // Show result summary
+    const resEl = document.getElementById('ocr-patient-result')
+    const fieldsEl = document.getElementById('ocr-patient-fields')
+    resEl.style.display = 'block'
+    fieldsEl.innerHTML = rows.map(r => `
+      <div class="ocr-result-row">
+        <div class="ocr-result-key">${r.label}</div>
+        <div class="ocr-result-val ${r.filled ? 'changed' : ''}">${r.val || '—'}</div>
+      </div>`).join('')
+    
+    toast(\`✅ AI识别完成，已填入\${rows.filter(r=>r.filled).length}个字段\`, 3000)
+
+  } catch(err) {
+    hideOCRLoading()
+    toast('❌ AI识别失败：' + err.message)
+  }
+}
+
+// ── Pathology OCR ──
+function triggerPathOCR(e) {
+  e.preventDefault()
+  if (!_apiKeys[_aiProvider]) { toast('❌ 请先设置 API Key'); return }
+  document.getElementById('path-ocr-inp').click()
+}
+
+async function handlePathOCR(e) {
+  const file = e.target.files[0]; if (!file) return
+  e.target.value = ''
+  
+  // Check for pre-filled OCR data from patient modal
+  if (window._ocrPathData) {
+    const {rPath, ihc} = window._ocrPathData
+    if (rPath) document.getElementById('pf-rp').value = rPath
+    if (ihc) document.getElementById('pf-ihc').value = ihc
+    document.getElementById('path-img-name').textContent = '✅ 已从之前识别的报告中填入'
+    document.getElementById('path-img-preview').innerHTML = \`<div style="background:#f0faf8;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:13px;color:var(--p)">已使用之前病理报告识别的结果填入，请核对并修改。</div>\`
+    window._ocrPathData = null
+    return
+  }
+  
+  showOCRLoading('正在提取病理报告内容…')
+  try {
+    const b64 = await fileToBase64(file)
+    const mt = file.type || 'image/jpeg'
+    const prompt = \`请从这张病理报告图片中提取信息，只返回JSON，不要markdown代码块：
+{
+  "rPath": "常规病理完整描述，保留原文格式和换行，包含组织学类型、分级、切缘、淋巴结等全部信息",
+  "ihc": "免疫组化完整结果，保留原文，如：ER(90% 3+), PR(60%+), Her-2(1+), Ki67(5%+)"
+}
+两个字段都保留原始文本，不要修改或总结。\`
+    
+    const raw = await callClaudeOCR(b64, mt, prompt)
+    hideOCRLoading()
+    const clean = raw.replace(/\`\`\`json?\n?|\`\`\`/g, '').trim()
+    const result = JSON.parse(clean)
+    
+    if (result.rPath) { document.getElementById('pf-rp').value = result.rPath }
+    if (result.ihc) { document.getElementById('pf-ihc').value = result.ihc }
+    
+    document.getElementById('path-img-name').textContent = '✅ AI识别完成，请核对上方内容'
+    document.getElementById('path-img-preview').innerHTML = \`<img src="data:${mt};base64,${b64}" style="width:100%;border-radius:8px;margin-top:8px;max-height:160px;object-fit:contain;background:#f5f5f5">\`
+    toast('✅ 病理报告识别完成', 2500)
+  } catch(err) {
+    hideOCRLoading()
+    // Show image for manual reference
+    const reader = new FileReader()
+    reader.onload = ev => { document.getElementById('path-img-preview').innerHTML = \`<img src="\${ev.target.result}" style="width:100%;border-radius:8px;margin-top:8px;max-height:160px;object-fit:contain"><div style="font-size:12px;color:var(--acc);margin-top:6px">AI识别失败（\${err.message}），请手动填写</div>\` }
+    reader.readAsDataURL(file)
+    toast('❌ 识别失败：' + err.message)
+  }
+}
+
+// Keep old name as alias
+function handlePathImg(e) { handlePathOCR(e) }
 
 function savePathology() {
   const rp = document.getElementById('pf-rp').value.trim()
   const ihc = document.getElementById('pf-ihc').value.trim()
   if (!rp||!ihc) { toast('请填写常规病理和免疫组化'); return }
   const p = DB.patients.find(x => x.id === _editId)
-  p.rPath = rp; p.ihc = ihc; p.pathDone = true
+  p.rPath = rp; p.ihc = ihc; p.pathDone = true; p.updatedAt = new Date().toISOString()
   save(); closeModal('mo-path'); renderDetail(_detailId); toast('病理结果已保存 ✓'); _editId = null
 }
 
@@ -1492,7 +1889,7 @@ function renderStats() {
 //  GITHUB GIST SYNC ENGINE
 // ══════════════════════════════════════════════
 const SYNC = {
-  token: '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',
+  token: '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',
   gistId: localStorage.getItem('bcs_gist_id') || null,
   filename: 'breast_surgery_data.json',
   syncing: false,
@@ -1598,28 +1995,89 @@ function save() {
 }
 
 // ══════════════════════════════════════════════
-//  IMPORT / EXPORT (local backup)
+//  IMPORT / EXPORT — 本地文件同步
 // ══════════════════════════════════════════════
+
+// 导出：生成带时间戳的JSON文件
 function exportData() {
-  const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' })
+  const out = { ...DB, exportedAt: new Date().toISOString(), exportedFrom: location.hostname || 'desktop' }
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = `乳腺外科数据_${today()}.json`
-  a.click(); toast('数据已导出到本地 ✓')
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+  toast('✅ 数据文件已下载，可传给其他设备导入')
 }
-function importData() { document.getElementById('inp-import').click() }
+
+let _importMode = 'merge'
+function startImport(mode) {
+  _importMode = mode
+  document.getElementById('inp-import').click()
+}
+// keep old name for compatibility
+function importData() { startImport('merge') }
+
 function doImport(e) {
   const file = e.target.files[0]; if (!file) return
   const reader = new FileReader()
   reader.onload = ev => {
     try {
-      const data = JSON.parse(ev.target.result)
-      if (!data.patients) throw new Error('格式不正确')
-      if (!confirm(`将导入 ${data.patients.length} 位患者。是否覆盖当前数据？`)) return
-      DB = data; save(); navTo('dashboard'); toast(`成功导入 ${DB.patients.length} 位患者数据 ✓`)
-    } catch(err) { toast('导入失败：'+err.message) }
+      const remote = JSON.parse(ev.target.result)
+      if (!remote.patients) throw new Error('格式不正确，缺少patients字段')
+
+      if (_importMode === 'overwrite') {
+        // 完全覆盖
+        if (!confirm(`⚠️ 将用导入文件的 ${remote.patients.length} 位患者数据完全替换本地数据。\n\n确认继续？`)) { e.target.value=''; return }
+        DB = { patients: remote.patients, guidelines: remote.guidelines || DB.guidelines || [] }
+        save(); navTo('dashboard')
+        toast(`✅ 已覆盖导入 ${DB.patients.length} 位患者`)
+
+      } else {
+        // 智能合并：以患者ID为key，保留更新时间更新的版本
+        const localMap = {}
+        DB.patients.forEach(p => localMap[p.id] = p)
+        let added = 0, updated = 0, kept = 0
+
+        remote.patients.forEach(rp => {
+          const lp = localMap[rp.id]
+          if (!lp) {
+            // 本地没有 → 直接添加
+            localMap[rp.id] = rp; added++
+          } else {
+            // 两边都有 → 比较更新时间，取较新的
+            const rTime = new Date(rp.updatedAt || rp.createdAt || 0).getTime()
+            const lTime = new Date(lp.updatedAt || lp.createdAt || 0).getTime()
+            if (rTime > lTime) { localMap[rp.id] = rp; updated++ }
+            else kept++
+          }
+        })
+
+        const merged = Object.values(localMap)
+        const msg = `合并结果：
+• 新增患者：${added} 位
+• 更新患者：${updated} 位
+• 本地保留：${kept} 位
+
+共 ${merged.length} 位患者，确认导入？`
+        if (!confirm(msg)) { e.target.value=''; return }
+
+        DB.patients = merged.sort((a,b) => (b.surgDate||'').localeCompare(a.surgDate||''))
+        // 合并指南（去重）
+        if (remote.guidelines?.length) {
+          const gMap = {}
+          ;(DB.guidelines||[]).forEach(g => gMap[g.id]=g)
+          remote.guidelines.forEach(g => { if (!gMap[g.id]) gMap[g.id]=g })
+          DB.guidelines = Object.values(gMap)
+        }
+        save(); navTo('dashboard')
+        toast(`✅ 合并完成：新增${added}位，更新${updated}位，共${DB.patients.length}位`)
+      }
+
+    } catch(err) { toast('❌ 导入失败：' + err.message) }
+    e.target.value = ''
   }
-  reader.readAsText(file); e.target.value = ''
+  reader.readAsText(file)
 }
 
 function printDetail() { window.print() }
@@ -1644,6 +2102,10 @@ function initDemo() {
 initDemo()
 renderDashboard()
 updateBadge()
+// Init AI provider UI
+_aiProvider = localStorage.getItem('bcs_ai_provider') || 'anthropic'
+_apiKeys = JSON.parse(localStorage.getItem('bcs_api_keys') || '{}')
+updateApiKeyStatus()
 // Initial sync status display
 setSyncStatus(SYNC.lastSync ? 'ok' : 'idle', SYNC.lastSync ? `上次同步 ${SYNC.lastSync}` : '未同步')
 // Try pull from cloud on first load if gistId exists
